@@ -57,3 +57,6 @@ RUN echo 'export HISTFILE=/workspace/.bash_history' >> ~/.bashrc && \
   echo 'export PROMPT_COMMAND="history -a"' >> ~/.bashrc
 
 ENV DEVCONTAINER=true
+
+# Install Claude Code
+RUN npm install -g @anthropic-ai/claude-code
