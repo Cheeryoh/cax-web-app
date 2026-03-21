@@ -1,0 +1,48 @@
+{
+  "name": "CAX Web App",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "forwardPorts": [3000, 5000, 8000, 8080, 5173],
+  "portsAttributes": {
+    "3000": { "label": "Frontend Dev Server" },
+    "5000": { "label": "Backend API" },
+    "8000": { "label": "Backend Alt" },
+    "8080": { "label": "App Server" },
+    "5173": { "label": "Vite Dev Server" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "github.vscode-github-actions",
+        "ms-vscode.vscode-typescript-next",
+        "christian-kohler.path-intellisense",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.tabSize": 2
+      }
+    }
+  },
+  "remoteUser": "node",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
+  "workspaceFolder": "/workspace",
+  "mounts": [
+    "source=cax-node-modules-${devcontainerId},target=/workspace/node_modules,type=volume"
+  ],
+  "containerEnv": {
+    "NODE_ENV": "development"
+  },
+  "postCreateCommand": "git config --global --add safe.directory /workspace && echo 'Dev container ready!'"
+}
