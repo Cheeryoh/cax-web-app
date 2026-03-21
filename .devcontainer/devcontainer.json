@@ -57,5 +57,5 @@
   "containerEnv": {
     "NODE_ENV": "development"
   },
-  "postCreateCommand": "git config --global --add safe.directory /workspace && mkdir -p ~/.config/powershell && echo 'Set-Location /workspace' > ~/.config/powershell/Microsoft.PowerShell_profile.ps1 && mkdir -p ~/.claude && cp /workspace/.devcontainer/claude-settings.json ~/.claude/settings.json && echo 'Dev container ready!'"
+  "postCreateCommand": "sudo chown -R node:node /home/node/.claude && git config --global --add safe.directory /workspace && mkdir -p ~/.config/powershell && echo 'Set-Location /workspace' > ~/.config/powershell/Microsoft.PowerShell_profile.ps1 && cp /workspace/.devcontainer/claude-settings.json ~/.claude/settings.json && echo 'Dev container ready!'"
 }
