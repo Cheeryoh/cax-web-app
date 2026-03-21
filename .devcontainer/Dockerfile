@@ -2,6 +2,7 @@ FROM node:20-bookworm-slim
 
 # Install essential dev tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
+  ca-certificates \
   git \
   curl \
   wget \
