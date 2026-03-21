@@ -16,6 +16,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   sudo \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install PowerShell
+RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor \
+    | tee /usr/share/keyrings/microsoft-archive-keyring.gpg > /dev/null \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/microsoft-debian-bookworm-prod bookworm main" \
+    | tee /etc/apt/sources.list.d/microsoft.list > /dev/null \
+  && apt-get update && apt-get install -y powershell \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Install GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \

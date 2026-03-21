@@ -30,7 +30,17 @@
         "editor.codeActionsOnSave": {
           "source.fixAll.eslint": "explicit"
         },
-        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.defaultProfile.linux": "pwsh",
+        "terminal.integrated.profiles.linux": {
+          "pwsh": {
+            "path": "/usr/bin/pwsh",
+            "icon": "terminal-powershell"
+          },
+          "bash": {
+            "path": "/bin/bash",
+            "icon": "terminal-bash"
+          }
+        },
         "editor.tabSize": 2
       }
     }
@@ -44,5 +54,5 @@
   "containerEnv": {
     "NODE_ENV": "development"
   },
-  "postCreateCommand": "git config --global --add safe.directory /workspace && echo 'Dev container ready!'"
+  "postCreateCommand": "git config --global --add safe.directory /workspace && mkdir -p ~/.config/powershell && echo 'Set-Location /workspace' > ~/.config/powershell/Microsoft.PowerShell_profile.ps1 && echo 'Dev container ready!'"
 }
