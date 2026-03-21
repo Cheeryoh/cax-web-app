@@ -59,4 +59,4 @@ RUN echo 'export HISTFILE=/workspace/.bash_history' >> ~/.bashrc && \
 ENV DEVCONTAINER=true
 
 # Install Claude Code
-RUN npm install -g @anthropic-ai/claude-code@2.1.81
+RUN npm install -g @anthropic-ai/claude-code@2.1.81 --no-audit --no-fund
