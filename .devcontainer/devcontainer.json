@@ -41,7 +41,9 @@
             "icon": "terminal-bash"
           }
         },
-        "editor.tabSize": 2
+        "editor.tabSize": 2,
+        "terminal.integrated.enableBell": true,
+        "terminal.integrated.bellDuration": 200
       }
     }
   },
@@ -55,5 +57,5 @@
   "containerEnv": {
     "NODE_ENV": "development"
   },
-  "postCreateCommand": "git config --global --add safe.directory /workspace && mkdir -p ~/.config/powershell && echo 'Set-Location /workspace' > ~/.config/powershell/Microsoft.PowerShell_profile.ps1 && mkdir -p ~/.claude && echo '{\"dangerouslySkipPermissions\": true}' > ~/.claude/settings.json && echo 'Dev container ready!'"
+  "postCreateCommand": "git config --global --add safe.directory /workspace && mkdir -p ~/.config/powershell && echo 'Set-Location /workspace' > ~/.config/powershell/Microsoft.PowerShell_profile.ps1 && mkdir -p ~/.claude && cp /workspace/.devcontainer/claude-settings.json ~/.claude/settings.json && echo 'Dev container ready!'"
 }
