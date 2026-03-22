@@ -38,12 +38,31 @@ After fixes, return to step 3.
 
 ### 5. Iteration Cap — CRITICAL
 If the SAME failure persists after **3 fix attempts**:
-- STOP the cycle
-- Compile full context: the failure, all 3 attempted fixes, and why they didn't work
-- Escalate to the human with this context
-- Do NOT continue polluting agent contexts with failed approaches
+- STOP the single-agent fix cycle
+- Create an RCA brief in `/workspace/rca-docs/` with: symptom, what was tried, hypotheses
+- Escalate to **Parallel Investigation Mode** (see below)
 
-### 6. Completion
+### 6. Parallel Investigation Mode
+When triggered by the 3-retry cap:
+
+1. **Create RCA brief** with symptom, attempted fixes, and hypotheses
+2. **Fan out** to Alpha/Beta agents in **worktree isolation** (`isolation: "worktree"`):
+   - **developer-alpha**: "The app code is the problem" — React lifecycle, state, auth patterns
+   - **developer-beta**: "The infrastructure is the problem" — Next.js config, SSR, module loading
+   - **qa-alpha**: "The test approach is wrong" — Playwright APIs, auth mechanisms, cookie handling
+   - **qa-beta**: "The environment assumptions are wrong" — production vs dev differences
+3. **Coordinate via SendMessage + filesystem:**
+   - Agents write findings to `/workspace/rca-docs/findings/{agent-name}-{issue-id}.md`
+   - Relay significant discoveries between agents via SendMessage
+   - Enforce anti-duplication: if two agents converge on the same approach, reassign one
+4. **When any agent reports resolution:**
+   - Send "STOP — resolution found" to all other agents
+   - Verify the fix in the worktree
+   - Apply the winning fix to main branch
+   - Document in the RCA what worked and why
+5. **If NO agent finds resolution:** Escalate to human with all findings
+
+### 7. Completion
 When the QA pipeline passes: report "Feature complete" to the human with a summary of what was built and any screenshots in `/specs/__snapshots__/`.
 
 ## Inter-Agent Communication

@@ -1,0 +1,59 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What is the primary advantage of using Plan Mode in Claude Code before implementing a feature?",
+      "options": [
+        { "key": "A", "text": "It makes Claude Code run faster" },
+        { "key": "B", "text": "It separates research and planning from execution, preventing solving the wrong problem" },
+        { "key": "C", "text": "It automatically generates test cases" },
+        { "key": "D", "text": "It locks files to prevent accidental edits" }
+      ],
+      "correctAnswer": "B"
+    },
+    {
+      "id": "q2",
+      "text": "When working with Claude Code, what is the most effective way to verify UI changes?",
+      "options": [
+        { "key": "A", "text": "Ask Claude to describe what the page looks like" },
+        { "key": "B", "text": "Manually open the browser every time" },
+        { "key": "C", "text": "Provide screenshots, tests, or expected outputs so Claude can check its own work" },
+        { "key": "D", "text": "Trust that Claude's output is always correct" }
+      ],
+      "correctAnswer": "C"
+    },
+    {
+      "id": "q3",
+      "text": "What happens when Claude Code's context window fills up during a long session?",
+      "options": [
+        { "key": "A", "text": "Claude automatically saves to disk and continues" },
+        { "key": "B", "text": "Performance degrades — Claude may forget earlier instructions or make more mistakes" },
+        { "key": "C", "text": "The session crashes and you lose all work" },
+        { "key": "D", "text": "Claude switches to a smaller model automatically" }
+      ],
+      "correctAnswer": "B"
+    },
+    {
+      "id": "q4",
+      "text": "What is the recommended approach when Claude Code makes the same mistake twice despite corrections?",
+      "options": [
+        { "key": "A", "text": "Keep correcting until it gets it right" },
+        { "key": "B", "text": "Add more detailed instructions to CLAUDE.md" },
+        { "key": "C", "text": "Run /clear and start a fresh session with a better initial prompt incorporating what you learned" },
+        { "key": "D", "text": "Switch to a different AI model" }
+      ],
+      "correctAnswer": "C"
+    },
+    {
+      "id": "q5",
+      "text": "In the context of AI-assisted development, what does 'Discernment' in the 4D framework refer to?",
+      "options": [
+        { "key": "A", "text": "The ability to write code without any AI assistance" },
+        { "key": "B", "text": "Critically evaluating AI suggestions — asking why, comparing approaches, and rejecting bad outputs" },
+        { "key": "C", "text": "Delegating all coding tasks to the AI" },
+        { "key": "D", "text": "Describing problems in great technical detail" }
+      ],
+      "correctAnswer": "B"
+    }
+  ]
+}

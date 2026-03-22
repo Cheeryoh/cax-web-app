@@ -10,3 +10,5 @@ yarn-debug.log*
 yarn-error.log*
 .DS_Store
 .bash_history
+# Playwright auth state files — contain session cookies, never commit
+specs/.auth/
