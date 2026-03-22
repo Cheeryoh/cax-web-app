@@ -490,7 +490,7 @@ export async function evaluateFluencyPerTask(attemptId: number): Promise<void> {
 
         const { data: evalRow, error: evalInsertError } = await supabase
           .from("task_evaluations")
-          .insert({
+          .upsert({
             attempt_id: attemptId,
             task_id: taskId,
             dimension,
@@ -498,13 +498,13 @@ export async function evaluateFluencyPerTask(attemptId: number): Promise<void> {
             llm_justification: justification,
             status: "llm_scored",
             final_score: score,
-          })
+          }, { onConflict: "attempt_id,task_id,dimension" })
           .select("id")
           .single();
 
         if (evalInsertError) {
           throw new Error(
-            `evaluateFluencyPerTask mock insert task_evaluations failed (${taskId}/${dimension}): ${evalInsertError.message}`
+            `evaluateFluencyPerTask mock upsert task_evaluations failed (${taskId}/${dimension}): ${evalInsertError.message}`
           );
         }
 
@@ -580,7 +580,7 @@ export async function evaluateFluencyPerTask(attemptId: number): Promise<void> {
 
       const { data: evalRow, error: evalInsertError } = await supabase
         .from("task_evaluations")
-        .insert({
+        .upsert({
           attempt_id: attemptId,
           task_id: taskId,
           dimension,
@@ -588,13 +588,13 @@ export async function evaluateFluencyPerTask(attemptId: number): Promise<void> {
           llm_justification: justification,
           status,
           final_score: score,
-        })
+        }, { onConflict: "attempt_id,task_id,dimension" })
         .select("id")
         .single();
 
       if (evalInsertError) {
         throw new Error(
-          `evaluateFluencyPerTask insert task_evaluations failed (${taskId}/${dimension}): ${evalInsertError.message}`
+          `evaluateFluencyPerTask upsert task_evaluations failed (${taskId}/${dimension}): ${evalInsertError.message}`
         );
       }
 
