@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession, getCandidateById } from "@/lib/auth-service";
 import {
   createAttempt,
+  getAttempt,
   getQuestions,
   submitMcAnswers,
   updateAttemptStatus,
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
 
   if (action === "questions") {
     // Return questions without correct answers
-    const questions = getQuestions().map(({ correctAnswer: _unused, ...q }) => q);
+    const questions = getQuestions().map(({ correctAnswer: _, ...q }) => q);
     return NextResponse.json({ questions });
   }
 
@@ -51,7 +52,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   const { action } = body;
 
   if (action === "start") {
@@ -65,8 +71,12 @@ export async function POST(request: NextRequest) {
     if (!attemptId || !answers) {
       return NextResponse.json({ error: "Missing attemptId or answers" }, { status: 400 });
     }
-    const result = await submitMcAnswers(attemptId, answers);
-    await updateAttemptStatus(attemptId, "mc_completed");
+    const attempt = await getAttempt(attemptId as number);
+    if (!attempt || attempt.candidate_id !== candidate.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const result = await submitMcAnswers(attemptId as number, answers as Array<{ questionId: string; selectedAnswer: string }>);
+    await updateAttemptStatus(attemptId as number, "mc_completed");
     return NextResponse.json({ result });
   }
 
@@ -75,9 +85,13 @@ export async function POST(request: NextRequest) {
     if (!attemptId) {
       return NextResponse.json({ error: "Missing attemptId" }, { status: 400 });
     }
-    await updateAttemptStatus(attemptId, "submitted");
+    const attempt = await getAttempt(attemptId as number);
+    if (!attempt || attempt.candidate_id !== candidate.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    await updateAttemptStatus(attemptId as number, "submitted");
     // Fire-and-forget: run evaluation asynchronously after submission
-    runFullEvaluation(attemptId).catch((err) =>
+    runFullEvaluation(attemptId as number).catch((err) =>
       console.error("Auto-evaluation failed:", err)
     );
     return NextResponse.json({ success: true });

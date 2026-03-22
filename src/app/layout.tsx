@@ -1,3 +1,7 @@
+// Prevent static prerendering — all pages use AuthProvider (client component)
+// which fails during static prerender on Next.js 16.2.1 with Turbopack.
+export const dynamic = "force-dynamic";
+
 import type { Metadata } from "next";
 import { Source_Serif_4, Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";

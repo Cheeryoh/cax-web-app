@@ -274,3 +274,66 @@ GitHub API doesn't support per-Codespace env vars at creation. Solution for 4 co
 
 ### Implementation Plan
 7 phases: Supabase setup → auth migration → services migration → push-based scoring → Vercel config → test adaptation → deploy
+
+---
+
+## Session 6 — 2026-03-22: Validation Engine Fix + Defensible Evaluation System
+
+### Validation Engine Bug
+Candidate completed lab (3/3 tasks fixed by Claude Code) but admin dashboard showed `0/0`. Root causes:
+1. Template repo had no Stop hook to run `tests/validate.js` and POST `lab_results` event
+2. `evaluateLabResults()` silently returned when no validation event existed
+3. Admin dashboard only showed candidates with `role: "candidate"`, but admin user took the exam
+
+**Fixes applied:**
+- `evaluateLabResults()` now inserts 3 failing rows (shows `0/3`) when no event exists
+- Added `upsertLabResult()` for admin overrides, `update_lab_task` API action
+- Made `/api/evaluate` synchronous (removed fragile 2s timeout)
+- Template repo: Updated `tests/validate.js` check names to match `TASK_CHECK_MAP`, added `tests/post-results.sh`, added Stop hook to `.claude/settings.json`
+- `getAllCandidates()` changed to show all users with attempts regardless of role
+
+### Admin Dashboard UX Fix
+4D justification text overflowed containers. Fixed with `min-w-0` on grid children, `break-words overflow-hidden` on justification text, `w-full overflow-hidden` on review panel.
+
+### Defensible Evaluation System — Architecture Overhaul
+User requirement: Admin cannot auto-pass/auto-fail candidates (violates Diligence). Instead:
+- **Per-task, per-dimension scoring** (3 tasks × 4 dimensions = 12 evaluations)
+- **LLM is always the scorer** — admin provides context/observations, LLM re-evaluates
+- **Human-in-the-loop** without human override — the human provides missing context, not a score
+- **Convergence model**: Admin confirms LLM score OR provides context → LLM re-evaluates (score may or may not change) → result is defensible because LLM had full information
+- **No manual pass/fail** — finalization is algorithmic (all 4 dimension averages >= 3.0, no individual < 2.0)
+
+### Schema Changes
+- `exam_id TEXT UNIQUE` added to `attempts` (format: `EX-YYYY-NNN`)
+- `task_id TEXT` added to `validation_events` (nullable, attributed via heuristics)
+- New table: `task_evaluations` (per-task per-dimension state + convergence status)
+- New table: `evaluation_dialogue` (admin-LLM dialogue audit trail)
+
+### Three Dedicated Candidates
+Replacing single demo account with 3 candidates + admin:
+- `alex.rivera@cax-demo.com` (Alex Rivera)
+- `jordan.patel@cax-demo.com` (Jordan Patel)
+- `sam.nakamura@cax-demo.com` (Sam Nakamura)
+- `admin@cax-demo.com` (CAX Administrator)
+
+### Tool Attribution
+File-path heuristic maps tool_use events to tasks:
+- jQuery/vendor files → task1_jquery
+- Analytics/UA/index.html → task2_analytics
+- SCSS/brand/profile/badge → task3_branding
+- Unmatched → "general"
+
+### LLM Batching
+Per-task evaluation fires 3 parallel API calls (one per task, each scores all 4 dimensions) via `Promise.all()`. Re-evaluations add 1 call each.
+
+### Session 6 Retrospective
+
+**Project duration so far:** ~6.7 hours (5.2h sessions 1-5 + ~1.5h session 6)
+
+**Critical finding:** Admin dashboard UI was left broken after API refactor. Three API actions were removed from the route handler (`submit_review`, `complete_review`, `update_lab_task`) but the admin page still calls them — buttons silently fail. Root cause: backend was prioritized over frontend; no post-refactor consistency check was run.
+
+**Lessons documented in `/workspace/retrospectives/`:**
+- Claude: Should grep for removed action names after API changes. Should run `/simplify` after multi-file refactors. Should ship the UI, not just the plumbing.
+- Human: Strong product intuition (auto-pass violates Diligence). Good iterative refinement of the convergence model. Should insist on seeing UI updates before moving on.
+
+**Remaining work:** Admin dashboard UI overhaul (Phase 5A-5B) — the critical deliverable. Plan documented at `/home/node/.claude/plans/reflective-strolling-newt.md`.
