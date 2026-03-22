@@ -337,3 +337,70 @@ Per-task evaluation fires 3 parallel API calls (one per task, each scores all 4 
 - Human: Strong product intuition (auto-pass violates Diligence). Good iterative refinement of the convergence model. Should insist on seeing UI updates before moving on.
 
 **Remaining work:** Admin dashboard UI overhaul (Phase 5A-5B) — the critical deliverable. Plan documented at `/home/node/.claude/plans/reflective-strolling-newt.md`.
+
+### Session 6 Continued — Implementation Completion + Deployment
+
+#### Admin Dashboard UI Overhaul (Completed)
+After the retrospective, completed the full admin dashboard rewrite:
+- Removed all dead UI: "Mark as Pass/Fail" buttons, lab task overrides, old 4D adjusted score/weight/comment form
+- Built new per-task tabbed interface (jQuery | Analytics | Branding) with:
+  - Collapsible tool usage timeline per task
+  - 4D dimension cards with LLM score, justification, status badges
+  - "Confirm Score" and "Provide Context & Re-evaluate" flows
+  - Dialogue thread showing admin-LLM conversation rounds
+  - Convergence progress counter (N/12 resolved)
+  - "Finalize" button with algorithmic pass/fail computation
+- Removed orphaned functions: `upsertLabResult()`, `upsertAdminReview()`, `completeReview()`
+
+#### QA Full UX Test
+Ran complete end-to-end test across all endpoints. Found and fixed:
+- **BUG 1 (Security):** No attempt ownership verification on `submit_mc`/`submit_lab` — any candidate could submit for another candidate's attempt. Fixed with `getAttempt()` + `candidate_id` check, returns 403.
+- **BUG 2 (Data integrity):** Re-evaluation wiped admin-reviewed task_evaluations. Fixed with guard: skip if any evaluations are `confirmed`/`resolved`/`admin_reviewed`.
+- **OBS 1:** Malformed JSON body returned 500 instead of 400. Added try/catch.
+
+#### Deployment Saga
+Multiple Vercel deployment issues encountered:
+1. **Missing env vars:** `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` not set in Vercel project → 500 on all API routes
+2. **Line break in JWT:** `SUPABASE_SERVICE_ROLE_KEY` pasted with a newline → "invalid header value" error
+3. **Multiple Vercel projects:** Three separate deployments (`cax-web-app`, `cax-web-app-cmhd`, `cax-web-app-qiwr`) with different env var configs
+4. **Resolution:** Deleted broken `cax-web-app` project, renamed working `cax-web-app-cmhd` to `cax-web-app`. Domain stayed as `cax-web-app-cmhd.vercel.app` — Vercel doesn't auto-reassign `.vercel.app` domains on rename.
+
+**Production URL:** `https://cax-web-app-cmhd.vercel.app`
+**SUBMIT_ENDPOINT:** Updated to match production URL
+
+#### Concurrent Evaluation Fix
+Discovered duplicate key error when `submit_lab` auto-evaluation raced with manual evaluation trigger. Fixed by changing `insert` → `upsert` with `onConflict: "attempt_id,task_id,dimension"` in `evaluateFluencyPerTask()`.
+
+#### CSS Text Wrapping — Recurring Issue
+The 4D dimension card text wrapping was fixed **three times** across the session:
+1. First fix: added `min-w-0` + `break-words overflow-hidden` to cards (UX designer agent)
+2. Admin page rewrite dropped the fix — only carried `min-w-0 break-words`
+3. Removed `overflow-hidden` from text element (correct) but didn't add it to card container (incorrect)
+4. Final fix: `min-w-0 overflow-hidden` on card container, `break-words` on text elements
+
+**Rule added to CLAUDE.md:** Grid/flex children need both `min-w-0` AND `overflow-hidden` on the container. Never use `overflow-hidden` on the text element itself.
+
+#### Template Repo — SCENARIO.md as Default
+Renamed `README.md` → `SETUP.md` and `SCENARIO.md` → `README.md` in the template repo so candidates see the exam tasks first when opening their Codespace.
+
+#### CLAUDE.md Updates
+- **Purged:** SQLite/better-sqlite3 references (migrated to Supabase), `data/cax.db` references, `getDb()` singleton reference
+- **Updated:** Tech stack to reflect Supabase Postgres, added Vercel deployment
+- **Added:** Refactoring Rule (grep for callers when removing API actions), CSS Grid/Flex Text Wrapping pattern, Evaluation Architecture documentation, Retrospectives folder reference
+
+#### Lessons Learned (Session 6 Final)
+
+**Claude:**
+- When deleting API endpoints, grep for all callers before declaring done
+- CSS fixes must be verified visually — pushing blind leads to recurring bugs
+- After rewriting a file, verify that previously-applied fixes are preserved
+- Run `/simplify` after multi-file refactors
+- Ship the UI with the backend — infrastructure without a frontend is unusable
+
+**Human:**
+- Screenshots accelerate CSS debugging — describe what you see, not just the DOM
+- Test the deployed app after env var changes, not just the dashboard
+- Vercel project naming/domain assignment is non-trivial — verify the URL actually resolves
+
+#### Project Duration
+~9 hours total (5.2h sessions 1-5 + ~3.8h session 6)

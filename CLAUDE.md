@@ -4,15 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the **CAX Web App** — a candidate assessment platform built with Next.js 16 (App Router), SQLite (better-sqlite3), TailwindCSS v4, and shadcn/ui v4. It evaluates Claude Code proficiency through multiple-choice questions and a hands-on performance lab.
+This is the **CAX Web App** — a candidate assessment platform built with Next.js 16 (App Router), Supabase Postgres, TailwindCSS v4, and shadcn/ui v4. It evaluates Claude Code proficiency through multiple-choice questions and a hands-on performance lab with a defensible human-in-the-loop evaluation system.
 
 ## Tech Stack (Verified)
 
 - **Framework:** Next.js 16.2.1 (Turbopack, App Router)
 - **UI:** TailwindCSS v4, shadcn/ui v4 (Base UI primitives, NOT Radix)
-- **Database:** SQLite via better-sqlite3 (synchronous API)
-- **Auth:** bcryptjs + SQLite session store + AuthProvider React Context
+- **Database:** Supabase Postgres (async API via `@supabase/supabase-js`)
+- **Auth:** bcryptjs + Supabase session store + AuthProvider React Context
+- **Evaluation:** Per-task 4D scoring via Claude Haiku API, human-LLM convergence model
 - **Testing:** Vitest (unit), Playwright 1.58.2 + Chromium (E2E/visual/a11y), axe-core (accessibility)
+- **Deployment:** Vercel (serverless)
 
 ## Development Environment
 
@@ -83,13 +85,14 @@ Before marking ANY phase complete:
 3. Prove it works with a command (e.g., `npx playwright --version`, `npm run validate`)
 4. "All dependencies installed" means all dependencies THE PLAN REQUIRES — not just what package.json happens to list
 5. The plan is the source of truth. Package.json is an artifact.
-6. Run `npm run qa` against a CLEAN state (delete `data/cax.db` + `specs/.auth/`) before declaring a phase complete — not just `npm run validate`
+6. Run `npm run qa` against a CLEAN state (clear `specs/.auth/`) before declaring a phase complete — not just `npm run validate`
 
 ## Database Operations — IMPORTANT
 
-- After deleting `data/cax.db`, always restart the dev server (`npm run dev`)
-- The `getDb()` singleton validates its connection on each call, but a server restart is the cleanest recovery
-- Never delete the DB while Playwright tests are running
+- Database is Supabase Postgres (not SQLite). All queries use `getSupabase()` from `src/lib/supabase.ts`
+- Required env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- Schema defined in `src/lib/schema.postgres.sql`
+- Key tables: `candidates`, `attempts` (with `exam_id`), `task_evaluations`, `evaluation_dialogue`, `validation_events` (with `task_id`), `lab_results`
 
 ## Debugging Test Failures — IMPORTANT
 
@@ -114,8 +117,32 @@ Maintain two living documents:
 1. `/workspace/WORK_LOG.md` — What was built, decisions, blockers, resolutions
 2. `/workspace/TRANSCRIPT.md` — Human-AI collaboration record
 
-## RCA Documentation
+## Refactoring Rule — IMPORTANT
 
-When a major issue is encountered:
-1. Create an RCA doc in `/workspace/rca-docs/` named `RCA-YYYY-MM-DD-brief-description.md`
-2. Use findings to update this file to prevent recurrence
+When removing or renaming an API action, endpoint, or exported function:
+1. **Grep the entire codebase** for all callers before declaring the change complete: `grep -rn "action_name" src/app/`
+2. Update or remove every caller — never leave UI calling dead endpoints
+3. Run `/simplify` after multi-file refactors to catch orphaned code and inconsistencies
+
+## CSS Grid/Flex Text Wrapping — IMPORTANT
+
+For text content inside grid or flex children that must wrap:
+- Card/container: `min-w-0 overflow-hidden` (both are required — `min-w-0` prevents grid blowout, `overflow-hidden` constrains text)
+- Text element: `break-words` (wraps long words at container boundary)
+- Do NOT use `overflow-hidden` on the text element itself — it clips vertically
+- This is a recurring pattern. Apply it consistently to all card containers.
+
+## Evaluation Architecture — IMPORTANT
+
+The 4D evaluation uses a defensible human-in-the-loop model:
+- **LLM is always the scorer** — admin provides context/observations, LLM re-evaluates
+- **No manual pass/fail** — finalization is algorithmic via `checkAndFinalizeAttempt()`
+- **Per-task, per-dimension** — 3 tasks × 4 dimensions = 12 evaluations per attempt
+- **Convergence statuses:** `pending` → `llm_scored` → `confirmed` (admin agrees) or `admin_reviewed` → `resolved` (LLM re-evaluated with admin context)
+- Key files: `src/lib/evaluation-service.ts`, `src/app/api/admin/route.ts`, `src/app/admin/page.tsx`
+
+## RCA & Retrospectives
+
+- RCA docs: `/workspace/rca-docs/` named `RCA-YYYY-MM-DD-brief-description.md`
+- Retrospectives: `/workspace/retrospectives/` — session performance reviews (Claude + Human)
+- Use findings to update this file to prevent recurrence
