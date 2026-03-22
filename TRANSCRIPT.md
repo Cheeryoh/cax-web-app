@@ -402,5 +402,12 @@ Renamed `README.md` → `SETUP.md` and `SCENARIO.md` → `README.md` in the temp
 - Test the deployed app after env var changes, not just the dashboard
 - Vercel project naming/domain assignment is non-trivial — verify the URL actually resolves
 
+#### CSS Text Wrapping — Fourth and Final Fix
+After the third fix (`min-w-0 overflow-hidden` on card container), the text still wasn't wrapping. User provided a screenshot showing text running off the right edge. Root cause: Tailwind's `break-words` maps to `overflow-wrap: break-word`, which only breaks **long unbreakable words**. Normal sentence text in a constrained flex child needs `overflow-wrap: anywhere` to force wrapping at the container boundary.
+
+Final fix: `[overflow-wrap:anywhere]` (Tailwind arbitrary value) on text elements + `w-full overflow-hidden` wrapper div. CLAUDE.md rule updated to specify `[overflow-wrap:anywhere]` alongside `break-words`.
+
+**Key learning:** `break-words` is not sufficient for text wrapping in CSS grid/flex children. `[overflow-wrap:anywhere]` is the correct Tailwind class for forcing text to respect container boundaries.
+
 #### Project Duration
-~9 hours total (5.2h sessions 1-5 + ~3.8h session 6)
+~9.5 hours total (5.2h sessions 1-5 + ~4.3h session 6)

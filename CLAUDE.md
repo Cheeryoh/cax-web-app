@@ -127,10 +127,11 @@ When removing or renaming an API action, endpoint, or exported function:
 ## CSS Grid/Flex Text Wrapping — IMPORTANT
 
 For text content inside grid or flex children that must wrap:
-- Card/container: `min-w-0 overflow-hidden` (both are required — `min-w-0` prevents grid blowout, `overflow-hidden` constrains text)
-- Text element: `break-words` (wraps long words at container boundary)
+- Card/container: `min-w-0 overflow-hidden` (both required — `min-w-0` prevents grid blowout, `overflow-hidden` constrains content)
+- Text element: `break-words [overflow-wrap:anywhere]` (the Tailwind `break-words` class alone only breaks long unbreakable words; `[overflow-wrap:anywhere]` forces wrapping at the container boundary for normal text too)
+- For long-form text, wrap in a `<div className="w-full overflow-hidden">` parent as belt-and-suspenders
 - Do NOT use `overflow-hidden` on the text element itself — it clips vertically
-- This is a recurring pattern. Apply it consistently to all card containers.
+- This pattern was fixed **four times** in session 6. Apply it consistently to all card containers.
 
 ## Evaluation Architecture — IMPORTANT
 
