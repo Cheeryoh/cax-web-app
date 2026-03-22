@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import {
   generateSessionToken,
   createSession,
@@ -6,15 +6,15 @@ import {
   destroySession,
   seedDemoData,
 } from "./auth-service";
-import { closeDb } from "./db";
 
 // Sessions are now Supabase-backed. These tests require SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
-beforeAll(async () => {
-  await seedDemoData(); // Seed a candidate we can reference
-});
+const SUPABASE_AVAILABLE = !!(
+  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-afterAll(() => {
-  closeDb();
+beforeAll(async () => {
+  if (!SUPABASE_AVAILABLE) return;
+  await seedDemoData(); // Seed a candidate we can reference
 });
 
 describe("generateSessionToken", () => {
@@ -27,7 +27,7 @@ describe("generateSessionToken", () => {
 });
 
 describe("createSession / getSession", () => {
-  it("creates a session and retrieves it", async () => {
+  it.skipIf(!SUPABASE_AVAILABLE)("creates a session and retrieves it", async () => {
     // Use candidate ID 1 (seeded demo candidate)
     const token = await createSession(1);
     const session = await getSession(token);
@@ -37,7 +37,7 @@ describe("createSession / getSession", () => {
 });
 
 describe("destroySession", () => {
-  it("destroys a session so it cannot be retrieved", async () => {
+  it.skipIf(!SUPABASE_AVAILABLE)("destroys a session so it cannot be retrieved", async () => {
     const token = await createSession(1);
     expect(await getSession(token)).not.toBeNull();
     await destroySession(token);
@@ -46,7 +46,7 @@ describe("destroySession", () => {
 });
 
 describe("getSession with unknown token", () => {
-  it("returns null for nonexistent token", async () => {
+  it.skipIf(!SUPABASE_AVAILABLE)("returns null for nonexistent token", async () => {
     expect(await getSession("nonexistent")).toBeNull();
   });
 });

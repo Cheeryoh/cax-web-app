@@ -57,13 +57,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Fire-and-forget: evaluation runs asynchronously
-  runFullEvaluation(attemptId).catch((err) => {
+  try {
+    await runFullEvaluation(attemptId);
+    return NextResponse.json({ status: "evaluation_complete" });
+  } catch (err) {
     console.error(
       `POST /api/evaluate: runFullEvaluation failed for attempt ${attemptId}:`,
       err instanceof Error ? err.message : String(err)
     );
-  });
-
-  return NextResponse.json({ status: "evaluation_started" });
+    return NextResponse.json(
+      {
+        status: "evaluation_failed",
+        error: err instanceof Error ? err.message : String(err),
+      },
+      { status: 500 }
+    );
+  }
 }

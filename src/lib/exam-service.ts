@@ -5,6 +5,7 @@ import path from "path";
 export interface Attempt {
   id: number;
   candidate_id: number;
+  exam_id: string | null;
   started_at: string;
   completed_at: string | null;
   status: string;
@@ -66,12 +67,26 @@ export function getQuestions(): Question[] {
   return JSON.parse(raw).questions;
 }
 
+async function generateExamId(): Promise<string> {
+  const supabase = getSupabase();
+  const year = new Date().getFullYear();
+  const prefix = `EX-${year}-`;
+  const { count, error } = await supabase
+    .from("attempts")
+    .select("*", { count: "exact", head: true })
+    .like("exam_id", `${prefix}%`);
+  if (error) throw new Error(`generateExamId failed: ${error.message}`);
+  const seq = String((count ?? 0) + 1).padStart(3, "0");
+  return `${prefix}${seq}`;
+}
+
 export async function createAttempt(candidateId: number): Promise<Attempt> {
   const supabase = getSupabase();
+  const examId = await generateExamId();
 
   const { data, error } = await supabase
     .from("attempts")
-    .insert({ candidate_id: candidateId })
+    .insert({ candidate_id: candidateId, exam_id: examId })
     .select()
     .single();
 
@@ -204,52 +219,6 @@ export async function getAdminReviews(
 
   if (error) throw new Error(`getAdminReviews failed: ${error.message}`);
   return (data ?? []) as AdminReview[];
-}
-
-export async function upsertAdminReview(
-  attemptId: number,
-  reviewerId: number,
-  dimension: string,
-  originalScore: number,
-  adjustedScore: number,
-  weight: number,
-  comment: string | null
-): Promise<AdminReview> {
-  const supabase = getSupabase();
-
-  const { data, error } = await supabase
-    .from("admin_reviews")
-    .upsert(
-      {
-        attempt_id: attemptId,
-        reviewer_id: reviewerId,
-        dimension,
-        original_score: originalScore,
-        adjusted_score: adjustedScore,
-        weight,
-        comment,
-      },
-      { onConflict: "attempt_id,dimension" }
-    )
-    .select()
-    .single();
-
-  if (error) throw new Error(`upsertAdminReview failed: ${error.message}`);
-  return data as AdminReview;
-}
-
-export async function completeReview(
-  attemptId: number,
-  finalResult: "pass" | "fail"
-): Promise<void> {
-  const supabase = getSupabase();
-
-  const { error } = await supabase
-    .from("attempts")
-    .update({ human_reviewed: 1, final_result: finalResult })
-    .eq("id", attemptId);
-
-  if (error) throw new Error(`completeReview failed: ${error.message}`);
 }
 
 export interface AttemptSummary {

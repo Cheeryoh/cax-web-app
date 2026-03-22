@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 interface AttemptSummary {
   attempt: {
     id: number;
+    exam_id: string | null;
     started_at: string;
     completed_at: string | null;
     status: string;
@@ -81,9 +82,18 @@ export default function CandidatePortal() {
             <Card key={summary.attempt.id} data-testid={`attempt-${summary.attempt.id}`}>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-3">
-                  Attempt #{summary.attempt.id}
-                  <Badge variant={summary.passed ? "default" : "destructive"}>
-                    {summary.passed ? "PASSED" : summary.attempt.status === "evaluated" ? "FAILED" : summary.attempt.status.toUpperCase()}
+                  {summary.attempt.exam_id ?? `Attempt #${summary.attempt.id}`}
+                  <Badge variant={
+                    summary.attempt.status === "evaluated"
+                      ? summary.passed ? "default" : "destructive"
+                      : "secondary"
+                  }>
+                    {summary.attempt.status === "in_progress" && "In Progress"}
+                    {summary.attempt.status === "mc_completed" && "MC Completed"}
+                    {summary.attempt.status === "lab_active" && "Lab Active"}
+                    {summary.attempt.status === "submitted" && "Under Review"}
+                    {summary.attempt.status === "evaluated" && (summary.passed ? "Passed" : "Failed")}
+                    {!["in_progress", "mc_completed", "lab_active", "submitted", "evaluated"].includes(summary.attempt.status) && summary.attempt.status}
                   </Badge>
                 </CardTitle>
                 <CardDescription>

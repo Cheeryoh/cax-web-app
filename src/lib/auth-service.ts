@@ -74,10 +74,19 @@ export async function getCandidateById(id: number): Promise<Candidate | null> {
 export async function getAllCandidates(): Promise<Candidate[]> {
   const supabase = getSupabase();
 
+  // Show all users who have at least one attempt, regardless of role
+  const { data: attemptRows, error: attemptError } = await supabase
+    .from("attempts")
+    .select("candidate_id");
+  if (attemptError) throw new Error(`getAllCandidates attempts query failed: ${attemptError.message}`);
+
+  const candidateIds = [...new Set((attemptRows ?? []).map((r: { candidate_id: number }) => r.candidate_id))];
+  if (candidateIds.length === 0) return [];
+
   const { data, error } = await supabase
     .from("candidates")
     .select("id, username, display_name, role, created_at, active")
-    .eq("role", "candidate")
+    .in("id", candidateIds)
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`getAllCandidates failed: ${error.message}`);
@@ -130,18 +139,34 @@ export async function destroySession(token: string): Promise<void> {
   if (error) throw new Error(`destroySession failed: ${error.message}`);
 }
 
-// Seed demo data
-export async function seedDemoData(): Promise<void> {
+// Seed a single candidate if it does not already exist.
+// createCandidate uses upsert with ignoreDuplicates:true, but .single() would
+// error when the row is silently ignored. This wrapper checks first.
+async function seedCandidate(
+  username: string,
+  password: string,
+  displayName: string,
+  role: "candidate" | "admin" = "candidate"
+): Promise<void> {
   const supabase = getSupabase();
-
   const { data: existing } = await supabase
     .from("candidates")
     .select("id")
-    .eq("username", "demo@example.com")
+    .eq("username", username)
     .maybeSingle();
-
   if (existing) return;
+  await createCandidate(username, password, displayName, role);
+}
 
-  await createCandidate("demo@example.com", "Cand!date2026", "Demo Candidate", "candidate");
-  await createCandidate("admin", "Adm!n$ecure2026", "Administrator", "admin");
+// Seed demo data
+export async function seedDemoData(): Promise<void> {
+  // Original accounts — kept for backwards compatibility
+  await seedCandidate("demo@example.com", "Cand!date2026", "Demo Candidate", "candidate");
+  await seedCandidate("admin", "Adm!n$ecure2026", "Administrator", "admin");
+
+  // Phase 2 — dedicated demo candidates and admin
+  await seedCandidate("alex.rivera@cax-demo.com", "C@xAlex2026!", "Alex Rivera", "candidate");
+  await seedCandidate("jordan.patel@cax-demo.com", "C@xJordan2026!", "Jordan Patel", "candidate");
+  await seedCandidate("sam.nakamura@cax-demo.com", "C@xSam2026!", "Sam Nakamura", "candidate");
+  await seedCandidate("admin@cax-demo.com", "Adm!n$ecure2026", "CAX Administrator", "admin");
 }

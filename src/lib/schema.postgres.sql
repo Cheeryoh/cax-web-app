@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS environments (
 CREATE TABLE IF NOT EXISTS attempts (
   id SERIAL PRIMARY KEY,
   candidate_id INTEGER NOT NULL REFERENCES candidates(id),
+  exam_id TEXT UNIQUE,
   started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   completed_at TIMESTAMPTZ,
   status TEXT NOT NULL DEFAULT 'in_progress' CHECK(status IN ('in_progress', 'mc_completed', 'lab_active', 'submitted', 'evaluated')),
@@ -86,8 +87,35 @@ CREATE TABLE IF NOT EXISTS validation_events (
   tool_name TEXT,
   tool_input TEXT,
   tool_output TEXT,
+  task_id TEXT,
   timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   raw_json TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS task_evaluations (
+  id SERIAL PRIMARY KEY,
+  attempt_id INTEGER NOT NULL REFERENCES attempts(id),
+  task_id TEXT NOT NULL,
+  dimension TEXT NOT NULL CHECK(dimension IN ('delegation','description','discernment','diligence')),
+  llm_score REAL,
+  llm_justification TEXT,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK(status IN ('pending','llm_scored','admin_reviewed','confirmed','resolved')),
+  final_score REAL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(attempt_id, task_id, dimension)
+);
+
+CREATE TABLE IF NOT EXISTS evaluation_dialogue (
+  id SERIAL PRIMARY KEY,
+  task_evaluation_id INTEGER NOT NULL REFERENCES task_evaluations(id),
+  round INTEGER NOT NULL DEFAULT 1,
+  actor TEXT NOT NULL CHECK(actor IN ('llm','admin')),
+  score REAL NOT NULL,
+  reasoning TEXT NOT NULL,
+  score_changed BOOLEAN,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Indexes
@@ -99,3 +127,6 @@ CREATE INDEX IF NOT EXISTS idx_environments_attempt ON environments(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_admin_reviews_attempt ON admin_reviews(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_candidate ON sessions(candidate_id);
 CREATE INDEX IF NOT EXISTS idx_validation_events_attempt ON validation_events(attempt_id);
+CREATE INDEX IF NOT EXISTS idx_validation_events_task ON validation_events(attempt_id, task_id);
+CREATE INDEX IF NOT EXISTS idx_task_evaluations_attempt ON task_evaluations(attempt_id);
+CREATE INDEX IF NOT EXISTS idx_eval_dialogue_eval ON evaluation_dialogue(task_evaluation_id);

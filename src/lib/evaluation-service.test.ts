@@ -1,147 +1,255 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+/**
+ * Unit tests for evaluation-service.ts
+ *
+ * These tests cover pure-logic functions only — no network calls, no Supabase.
+ * DB-touching functions (evaluateFluencyPerTask, etc.) require integration
+ * infrastructure and are tested via E2E.
+ */
+import { describe, it, expect } from "vitest";
 import {
-  evaluateLabResults,
-  evaluateFluency,
-  runFullEvaluation,
+  buildFluencyPrompt,
+  buildTaskFluencyPrompt,
+  buildReEvaluationPrompt,
 } from "./evaluation-service";
-import {
-  createAttempt,
-  updateAttemptStatus,
-  getLabResults,
-  getFluencyScore,
-  getAttempt,
-} from "./exam-service";
-import { seedDemoData } from "./auth-service";
-import { closeDb } from "./db";
-
-// Preserve original env value so afterAll can restore it
-const ORIGINAL_USE_MOCK = process.env.USE_MOCK;
-
-let attemptId: number;
-
-// These tests require SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY environment variables.
-beforeAll(async () => {
-  process.env.USE_MOCK = "true";
-  await seedDemoData(); // Ensure candidate ID 1 exists
-
-  // Create a fresh attempt for the evaluation tests and move it to 'submitted'
-  const attempt = await createAttempt(1);
-  attemptId = attempt.id;
-  await updateAttemptStatus(attemptId, "submitted");
-});
-
-afterAll(() => {
-  process.env.USE_MOCK = ORIGINAL_USE_MOCK;
-  closeDb();
-});
 
 // ---------------------------------------------------------------------------
-// evaluateLabResults
+// Minimal ValidationEvent fixture
 // ---------------------------------------------------------------------------
 
-describe("evaluateLabResults (mock mode)", () => {
-  it("inserts 3 lab_results rows for the attempt", async () => {
-    await evaluateLabResults(attemptId);
-
-    const results = await getLabResults(attemptId);
-    expect(results).toHaveLength(3);
-  });
-
-  it("each row has passed === 1", async () => {
-    // evaluateLabResults is idempotent — calling again gives same results
-    const results = await getLabResults(attemptId);
-    for (const row of results) {
-      expect(row.passed).toBe(1);
-    }
-  });
-
-  it("task IDs include task1_jquery, task2_analytics, task3_branding", async () => {
-    const results = await getLabResults(attemptId);
-    const taskIds = results.map((r) => r.task_id);
-    expect(taskIds).toContain("task1_jquery");
-    expect(taskIds).toContain("task2_analytics");
-    expect(taskIds).toContain("task3_branding");
-  });
-});
+function makeEvent(
+  overrides: Partial<{
+    id: number;
+    attempt_id: number;
+    event_type: string;
+    tool_name: string | null;
+    tool_input: string | null;
+    tool_output: string | null;
+    task_id: string | null;
+    timestamp: string;
+    raw_json: string;
+  }> = {}
+) {
+  return {
+    id: 1,
+    attempt_id: 42,
+    event_type: "tool_use",
+    tool_name: "read_file",
+    tool_input: JSON.stringify({ path: "vendor/jquery.js" }),
+    tool_output: JSON.stringify({ content: "/* jquery */" }),
+    task_id: "task1_jquery",
+    timestamp: "2026-03-22T10:00:00Z",
+    raw_json: "{}",
+    ...overrides,
+  };
+}
 
 // ---------------------------------------------------------------------------
-// evaluateFluency
+// buildFluencyPrompt (legacy)
 // ---------------------------------------------------------------------------
 
-describe("evaluateFluency (mock mode)", () => {
-  it("inserts a fluency_scores row for the attempt", async () => {
-    await evaluateFluency(attemptId);
-
-    const score = await getFluencyScore(attemptId);
-    expect(score).not.toBeNull();
+describe("buildFluencyPrompt", () => {
+  it("returns a non-empty string", () => {
+    const events = [makeEvent()];
+    const prompt = buildFluencyPrompt(events);
+    expect(typeof prompt).toBe("string");
+    expect(prompt.length).toBeGreaterThan(0);
   });
 
-  it("all four dimensions have scores between 1 and 5", async () => {
-    const score = await getFluencyScore(attemptId);
-    expect(score).not.toBeNull();
-
-    const { delegation, description, discernment, diligence } = score!;
-    for (const value of [delegation, description, discernment, diligence]) {
-      expect(value).not.toBeNull();
-      expect(value!).toBeGreaterThanOrEqual(1);
-      expect(value!).toBeLessThanOrEqual(5);
-    }
+  it("includes the 4D dimension names", () => {
+    const prompt = buildFluencyPrompt([makeEvent()]);
+    expect(prompt).toContain("Delegation");
+    expect(prompt).toContain("Description");
+    expect(prompt).toContain("Discernment");
+    expect(prompt).toContain("Diligence");
   });
 
-  it("raw_analysis is valid JSON", async () => {
-    const score = await getFluencyScore(attemptId);
-    expect(score).not.toBeNull();
-    expect(score!.raw_analysis).not.toBeNull();
+  it("includes the event timestamp", () => {
+    const event = makeEvent({ timestamp: "2026-03-22T10:00:00Z" });
+    const prompt = buildFluencyPrompt([event]);
+    expect(prompt).toContain("2026-03-22T10:00:00Z");
+  });
 
-    let parsed: unknown;
-    expect(() => {
-      parsed = JSON.parse(score!.raw_analysis!);
-    }).not.toThrow();
-    expect(typeof parsed).toBe("object");
+  it("includes the total event count", () => {
+    const events = [makeEvent(), makeEvent({ id: 2 }), makeEvent({ id: 3 })];
+    const prompt = buildFluencyPrompt(events);
+    expect(prompt).toContain("Total events: 3");
+  });
+
+  it("requests JSON output with all four dimensions", () => {
+    const prompt = buildFluencyPrompt([makeEvent()]);
+    expect(prompt).toContain('"delegation"');
+    expect(prompt).toContain('"description"');
+    expect(prompt).toContain('"discernment"');
+    expect(prompt).toContain('"diligence"');
+  });
+
+  it("handles events with null tool_input and tool_output gracefully", () => {
+    const event = makeEvent({ tool_input: null, tool_output: null });
+    expect(() => buildFluencyPrompt([event])).not.toThrow();
+  });
+
+  it("truncates very long tool_input", () => {
+    const longInput = JSON.stringify({ path: "x".repeat(2000) });
+    const event = makeEvent({ tool_input: longInput });
+    const prompt = buildFluencyPrompt([event]);
+    // Input truncated at 500 chars — the prompt should not contain the full 2000-char string
+    const fullPath = "x".repeat(2000);
+    expect(prompt).not.toContain(fullPath);
   });
 });
 
 // ---------------------------------------------------------------------------
-// runFullEvaluation
+// buildTaskFluencyPrompt (Phase 3/4)
 // ---------------------------------------------------------------------------
 
-describe("runFullEvaluation (mock mode)", () => {
-  // Use a separate attempt so these assertions are not muddied by the
-  // evaluateLabResults / evaluateFluency tests above.
-  let fullAttemptId: number;
+describe("buildTaskFluencyPrompt", () => {
+  const taskId = "task1_jquery";
+  const taskName = "jQuery Vulnerability Fix";
 
-  beforeAll(async () => {
-    const attempt = await createAttempt(1);
-    fullAttemptId = attempt.id;
-    await updateAttemptStatus(fullAttemptId, "submitted");
+  it("returns a non-empty string", () => {
+    const prompt = buildTaskFluencyPrompt(taskId, taskName, [makeEvent()]);
+    expect(typeof prompt).toBe("string");
+    expect(prompt.length).toBeGreaterThan(0);
   });
 
-  it("sets attempt status to 'evaluated'", async () => {
-    await runFullEvaluation(fullAttemptId);
-
-    const attempt = await getAttempt(fullAttemptId);
-    expect(attempt).not.toBeNull();
-    expect(attempt!.status).toBe("evaluated");
+  it("includes task name and id in the heading", () => {
+    const prompt = buildTaskFluencyPrompt(taskId, taskName, [makeEvent()]);
+    expect(prompt).toContain(taskName);
+    expect(prompt).toContain(taskId);
   });
 
-  it("produces 3 lab_results rows", async () => {
-    const results = await getLabResults(fullAttemptId);
-    expect(results).toHaveLength(3);
+  it("includes all 4 dimension names", () => {
+    const prompt = buildTaskFluencyPrompt(taskId, taskName, [makeEvent()]);
+    expect(prompt).toContain("Delegation");
+    expect(prompt).toContain("Description");
+    expect(prompt).toContain("Discernment");
+    expect(prompt).toContain("Diligence");
   });
 
-  it("produces 1 fluency_scores row", async () => {
-    const score = await getFluencyScore(fullAttemptId);
-    expect(score).not.toBeNull();
+  it("includes task event count", () => {
+    const events = [makeEvent(), makeEvent({ id: 2 })];
+    const prompt = buildTaskFluencyPrompt(taskId, taskName, events);
+    expect(prompt).toContain("Total task events: 2");
   });
 
-  it("is idempotent — running twice yields 3 lab_results rows and 1 fluency_scores row", async () => {
-    // Second call
-    await runFullEvaluation(fullAttemptId);
+  it("includes general events as context section when provided", () => {
+    const generalEvent = makeEvent({ id: 99, task_id: "general", tool_name: "bash" });
+    const prompt = buildTaskFluencyPrompt(taskId, taskName, [makeEvent()], [generalEvent]);
+    expect(prompt).toContain("General / Setup Events");
+  });
 
-    const results = await getLabResults(fullAttemptId);
-    expect(results).toHaveLength(3);
+  it("omits general context section when generalEvents is empty", () => {
+    const prompt = buildTaskFluencyPrompt(taskId, taskName, [makeEvent()], []);
+    expect(prompt).not.toContain("General / Setup Events");
+  });
 
-    const score = await getFluencyScore(fullAttemptId);
-    expect(score).not.toBeNull();
+  it("requests JSON output with all four dimensions", () => {
+    const prompt = buildTaskFluencyPrompt(taskId, taskName, [makeEvent()]);
+    expect(prompt).toContain('"delegation"');
+    expect(prompt).toContain('"description"');
+    expect(prompt).toContain('"discernment"');
+    expect(prompt).toContain('"diligence"');
+  });
+
+  it("handles empty events array without throwing", () => {
+    expect(() => buildTaskFluencyPrompt(taskId, taskName, [])).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildReEvaluationPrompt (Phase 4)
+// ---------------------------------------------------------------------------
+
+describe("buildReEvaluationPrompt", () => {
+  const taskId = "task2_analytics";
+  const taskName = "Dead Analytics Removal";
+  const dimension = "diligence";
+
+  const dialogueHistory = [
+    { round: 1, actor: "llm", score: 3.5, reasoning: "Candidate ran tests once." },
+    {
+      round: 2,
+      actor: "admin",
+      score: 3.5,
+      reasoning: "Candidate actually ran tests three times, not once.",
+    },
+  ];
+
+  it("returns a non-empty string", () => {
+    const prompt = buildReEvaluationPrompt(
+      taskId,
+      taskName,
+      dimension,
+      [makeEvent()],
+      dialogueHistory
+    );
+    expect(typeof prompt).toBe("string");
+    expect(prompt.length).toBeGreaterThan(0);
+  });
+
+  it("includes task name, id, and dimension", () => {
+    const prompt = buildReEvaluationPrompt(
+      taskId,
+      taskName,
+      dimension,
+      [makeEvent()],
+      dialogueHistory
+    );
+    expect(prompt).toContain(taskName);
+    expect(prompt).toContain(taskId);
+    expect(prompt).toContain(dimension);
+  });
+
+  it("includes all dialogue history entries", () => {
+    const prompt = buildReEvaluationPrompt(
+      taskId,
+      taskName,
+      dimension,
+      [makeEvent()],
+      dialogueHistory
+    );
+    expect(prompt).toContain("Round 1");
+    expect(prompt).toContain("Round 2");
+    expect(prompt).toContain("LLM");
+    expect(prompt).toContain("ADMIN");
+    expect(prompt).toContain("Candidate ran tests once.");
+    expect(prompt).toContain("Candidate actually ran tests three times");
+  });
+
+  it("instructs LLM to respond with score, reasoning, score_changed JSON", () => {
+    const prompt = buildReEvaluationPrompt(
+      taskId,
+      taskName,
+      dimension,
+      [makeEvent()],
+      dialogueHistory
+    );
+    expect(prompt).toContain('"score"');
+    expect(prompt).toContain('"reasoning"');
+    expect(prompt).toContain('"score_changed"');
+  });
+
+  it("includes dimension definition", () => {
+    const prompt = buildReEvaluationPrompt(
+      taskId,
+      taskName,
+      "delegation",
+      [makeEvent()],
+      dialogueHistory
+    );
+    // Dimension definitions are embedded in DIMENSION_DEFINITIONS
+    expect(prompt).toContain("Definition:");
+  });
+
+  it("handles empty dialogue history without throwing", () => {
+    expect(() =>
+      buildReEvaluationPrompt(taskId, taskName, dimension, [makeEvent()], [])
+    ).not.toThrow();
+  });
+
+  it("handles empty events array without throwing", () => {
+    expect(() =>
+      buildReEvaluationPrompt(taskId, taskName, dimension, [], dialogueHistory)
+    ).not.toThrow();
   });
 });
