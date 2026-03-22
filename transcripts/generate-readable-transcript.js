@@ -15,7 +15,7 @@ const OUTPUT = path.join(__dirname, "human-ai-transcript.md");
 const SECRET_PATTERNS = [
   /ghp_[A-Za-z0-9]{36}/g,
   /sk-ant-api03-[A-Za-z0-9_-]{80,}/g,
-  /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g,
+  /eyJhbGciOiJIUzI1Ni[A-Za-z0-9_.\-/+=\s]{20,}/g,
 ];
 
 function redact(text) {
@@ -297,10 +297,73 @@ while (i < mainMessages.length) {
   i++;
 }
 
-const output = lines.join("\n");
+// Post-process: deduplicate and merge consecutive same-speaker entries
+const rawOutput = lines.join("\n");
+
+// Parse into structured entries
+const entries = [];
+let currentEntry = null;
+for (const line of rawOutput.split("\n")) {
+  const headerMatch = line.match(/^### \[([^\]]+)\] (Human|Claude)$/);
+  if (headerMatch) {
+    if (currentEntry) entries.push(currentEntry);
+    currentEntry = { time: headerMatch[1], speaker: headerMatch[2], content: "" };
+  } else if (currentEntry) {
+    currentEntry.content += line + "\n";
+  } else {
+    // Preamble (before first entry)
+    if (!entries._preamble) entries._preamble = "";
+    entries._preamble = (entries._preamble || "") + line + "\n";
+  }
+}
+if (currentEntry) entries.push(currentEntry);
+
+// Deduplicate: remove exact content duplicates and merge consecutive same-speaker
+const deduped = [];
+for (let j = 0; j < entries.length; j++) {
+  const entry = entries[j];
+  const prev = deduped[deduped.length - 1];
+
+  // Skip exact duplicates (same speaker, same time, same content)
+  if (prev && prev.speaker === entry.speaker && prev.time === entry.time && prev.content.trim() === entry.content.trim()) {
+    continue;
+  }
+
+  // Skip [Request interrupted by user] if the next entry is from the same user
+  if (entry.content.trim() === "> [Request interrupted by user]" || entry.content.trim() === "> [Request interrupted by user for tool use]") {
+    // Keep only if it's meaningful context (between speaker switches)
+    const next = entries[j + 1];
+    if (next && next.speaker === entry.speaker) {
+      continue; // Skip — same speaker continues
+    }
+  }
+
+  // Merge consecutive same-speaker entries
+  if (prev && prev.speaker === entry.speaker && prev.time === entry.time) {
+    prev.content = prev.content.trimEnd() + "\n\n" + entry.content.trimStart();
+    continue;
+  }
+
+  deduped.push({ ...entry });
+}
+
+// Rebuild output
+const finalLines = [];
+finalLines.push((entries._preamble || "").trimEnd());
+finalLines.push("");
+
+for (const entry of deduped) {
+  finalLines.push(`### [${entry.time}] ${entry.speaker}`);
+  finalLines.push("");
+  finalLines.push(entry.content.trimEnd());
+  finalLines.push("");
+}
+
+const output = finalLines.join("\n");
 fs.writeFileSync(OUTPUT, output);
 
-console.log(`Written ${messageCount} conversation turns to ${OUTPUT}`);
+const finalCount = deduped.length;
+console.log(`Written ${finalCount} conversation turns to ${OUTPUT} (before dedup: ${messageCount})`);
 console.log(`File size: ${(output.length / 1024).toFixed(1)} KB`);
 
 // Verify no secrets leaked
