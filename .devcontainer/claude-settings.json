@@ -7,6 +7,10 @@
           {
             "type": "command",
             "command": "echo stop > /workspace/.claude-notify"
+          },
+          {
+            "type": "command",
+            "command": "node /workspace/transcripts/sync-transcripts.js > /workspace/transcripts/.last-sync.log 2>&1 &"
           }
         ]
       }

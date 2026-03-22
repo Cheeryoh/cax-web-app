@@ -53,7 +53,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            {/* Use native h1 so the page satisfies the page-has-heading-one a11y rule.
+                CardTitle renders as a <div>; the login card title IS the page heading. */}
+            <h1 className="font-heading text-base leading-snug font-medium">Sign In</h1>
             <CardDescription>
               Enter your credentials to access the assessment platform
             </CardDescription>

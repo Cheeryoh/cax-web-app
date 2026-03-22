@@ -88,6 +88,22 @@
         "metadata": {
           "actualWorkers": 12
         },
+        "id": "a11y",
+        "name": "a11y",
+        "testDir": "/workspace/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/a11y.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/workspace/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 12
+        },
         "id": "mobile",
         "name": "mobile",
         "testDir": "/workspace/specs",
@@ -154,12 +170,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 404,
+                  "duration": 691,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-03-22T06:50:37.600Z",
+                  "startTime": "2026-03-22T07:15:23.801Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -169,7 +185,7 @@
           ],
           "id": "17e3fe6f4d9d8bd79c6b-3293c4a88789a63ec2e4",
           "file": "auth.setup.ts",
-          "line": 72,
+          "line": 82,
           "column": 6
         },
         {
@@ -188,12 +204,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 582,
+                  "duration": 712,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-03-22T06:50:37.630Z",
+                  "startTime": "2026-03-22T07:15:23.796Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -203,7 +219,75 @@
           ],
           "id": "17e3fe6f4d9d8bd79c6b-17faa0b57b16ccb2567e",
           "file": "auth.setup.ts",
-          "line": 80,
+          "line": 90,
+          "column": 6
+        },
+        {
+          "title": "authenticate as candidate (logout)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "setup",
+              "projectName": "setup",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 473,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-03-22T07:15:23.794Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "17e3fe6f4d9d8bd79c6b-99a0e25d22e712fa1d65",
+          "file": "auth.setup.ts",
+          "line": 100,
+          "column": 6
+        },
+        {
+          "title": "authenticate as candidate (a11y)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "setup",
+              "projectName": "setup",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 829,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-03-22T07:15:23.828Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "17e3fe6f4d9d8bd79c6b-c981a8975a2898ef2204",
+          "file": "auth.setup.ts",
+          "line": 108,
           "column": 6
         },
         {
@@ -219,15 +303,15 @@
               "projectName": "setup",
               "results": [
                 {
-                  "workerIndex": 2,
-                  "parallelIndex": 2,
+                  "workerIndex": 4,
+                  "parallelIndex": 4,
                   "status": "passed",
-                  "duration": 433,
+                  "duration": 693,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-03-22T06:50:37.583Z",
+                  "startTime": "2026-03-22T07:15:23.801Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -237,7 +321,7 @@
           ],
           "id": "17e3fe6f4d9d8bd79c6b-1580989d32f149e984ed",
           "file": "auth.setup.ts",
-          "line": 90,
+          "line": 116,
           "column": 6
         }
       ]
@@ -268,15 +352,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 516,
+                      "duration": 767,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:37.670Z",
+                      "startTime": "2026-03-22T07:15:23.830Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -302,15 +386,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
-                      "parallelIndex": 4,
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
                       "status": "passed",
-                      "duration": 627,
+                      "duration": 747,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:37.686Z",
+                      "startTime": "2026-03-22T07:15:23.810Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -336,15 +420,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 5,
-                      "parallelIndex": 5,
+                      "workerIndex": 7,
+                      "parallelIndex": 7,
                       "status": "passed",
-                      "duration": 872,
+                      "duration": 1212,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:37.646Z",
+                      "startTime": "2026-03-22T07:15:23.863Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -370,15 +454,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 6,
-                      "parallelIndex": 6,
+                      "workerIndex": 8,
+                      "parallelIndex": 8,
                       "status": "passed",
-                      "duration": 553,
+                      "duration": 831,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:37.625Z",
+                      "startTime": "2026-03-22T07:15:23.827Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -404,15 +488,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 15,
-                      "parallelIndex": 9,
+                      "workerIndex": 17,
+                      "parallelIndex": 10,
                       "status": "passed",
-                      "duration": 335,
+                      "duration": 286,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.338Z",
+                      "startTime": "2026-03-22T07:15:25.856Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -438,15 +522,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 16,
+                      "workerIndex": 18,
                       "parallelIndex": 6,
                       "status": "passed",
-                      "duration": 294,
+                      "duration": 252,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.327Z",
+                      "startTime": "2026-03-22T07:15:25.901Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -472,15 +556,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 17,
-                      "parallelIndex": 7,
+                      "workerIndex": 19,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 553,
+                      "duration": 576,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.369Z",
+                      "startTime": "2026-03-22T07:15:25.927Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -506,15 +590,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 19,
-                      "parallelIndex": 3,
+                      "workerIndex": 20,
+                      "parallelIndex": 8,
                       "status": "passed",
-                      "duration": 362,
+                      "duration": 330,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.339Z",
+                      "startTime": "2026-03-22T07:15:25.926Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -548,15 +632,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 7,
-                      "parallelIndex": 7,
+                      "workerIndex": 9,
+                      "parallelIndex": 9,
                       "status": "passed",
-                      "duration": 470,
+                      "duration": 481,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:37.640Z",
+                      "startTime": "2026-03-22T07:15:23.819Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -582,15 +666,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 18,
-                      "parallelIndex": 8,
+                      "workerIndex": 21,
+                      "parallelIndex": 7,
                       "status": "passed",
-                      "duration": 286,
+                      "duration": 262,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.344Z",
+                      "startTime": "2026-03-22T07:15:25.951Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -624,15 +708,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 8,
-                      "parallelIndex": 8,
+                      "workerIndex": 10,
+                      "parallelIndex": 10,
                       "status": "passed",
-                      "duration": 633,
+                      "duration": 721,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:37.693Z",
+                      "startTime": "2026-03-22T07:15:23.826Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -658,15 +742,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 9,
-                      "parallelIndex": 9,
+                      "workerIndex": 11,
+                      "parallelIndex": 11,
                       "status": "passed",
-                      "duration": 618,
+                      "duration": 1245,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:37.654Z",
+                      "startTime": "2026-03-22T07:15:23.873Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -676,7 +760,7 @@
               ],
               "id": "31910af4fc7bd79eb650-99d72f19cfa4e5e6db9d",
               "file": "app-header.spec.ts",
-              "line": 120,
+              "line": 129,
               "column": 7
             },
             {
@@ -692,15 +776,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 10,
-                      "parallelIndex": 10,
+                      "workerIndex": 12,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 690,
+                      "duration": 208,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:37.654Z",
+                      "startTime": "2026-03-22T07:15:25.036Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -710,7 +794,7 @@
               ],
               "id": "31910af4fc7bd79eb650-3a4a67432573373b92b1",
               "file": "app-header.spec.ts",
-              "line": 150,
+              "line": 159,
               "column": 7
             },
             {
@@ -726,15 +810,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 11,
-                      "parallelIndex": 11,
+                      "workerIndex": 9,
+                      "parallelIndex": 9,
                       "status": "passed",
-                      "duration": 806,
+                      "duration": 1058,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:37.671Z",
+                      "startTime": "2026-03-22T07:15:24.381Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -744,7 +828,7 @@
               ],
               "id": "31910af4fc7bd79eb650-59ec04eebef3b4621cde",
               "file": "app-header.spec.ts",
-              "line": 167,
+              "line": 176,
               "column": 7
             },
             {
@@ -761,14 +845,14 @@
                   "results": [
                     {
                       "workerIndex": 13,
-                      "parallelIndex": 0,
+                      "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 306,
+                      "duration": 298,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.892Z",
+                      "startTime": "2026-03-22T07:15:25.337Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -778,7 +862,7 @@
               ],
               "id": "31910af4fc7bd79eb650-672f6ee5c241d6bcedf5",
               "file": "app-header.spec.ts",
-              "line": 175,
+              "line": 184,
               "column": 7
             },
             {
@@ -791,10 +875,10 @@
                   "annotations": [
                     {
                       "type": "skip",
-                      "description": "display-name is hidden sm:inline — not visible on mobile viewports",
+                      "description": "display-name is hidden sm:inline — not visible on mobile viewports; covered by 'display name hidden on mobile viewport' test",
                       "location": {
                         "file": "/workspace/specs/app-header.spec.ts",
-                        "line": 95,
+                        "line": 104,
                         "column": 10
                       }
                     }
@@ -804,22 +888,22 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 20,
-                      "parallelIndex": 4,
+                      "workerIndex": 22,
+                      "parallelIndex": 11,
                       "status": "skipped",
-                      "duration": 110,
+                      "duration": 128,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.341Z",
+                      "startTime": "2026-03-22T07:15:26.012Z",
                       "annotations": [
                         {
                           "type": "skip",
-                          "description": "display-name is hidden sm:inline — not visible on mobile viewports",
+                          "description": "display-name is hidden sm:inline — not visible on mobile viewports; covered by 'display name hidden on mobile viewport' test",
                           "location": {
                             "file": "/workspace/specs/app-header.spec.ts",
-                            "line": 95,
+                            "line": 104,
                             "column": 10
                           }
                         }
@@ -848,15 +932,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 21,
-                      "parallelIndex": 11,
+                      "workerIndex": 24,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 350,
+                      "duration": 307,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.403Z",
+                      "startTime": "2026-03-22T07:15:26.166Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -866,7 +950,7 @@
               ],
               "id": "31910af4fc7bd79eb650-19fbfd45fd1fd4c4542b",
               "file": "app-header.spec.ts",
-              "line": 120,
+              "line": 129,
               "column": 7
             },
             {
@@ -882,15 +966,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 22,
-                      "parallelIndex": 10,
+                      "workerIndex": 23,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 291,
+                      "duration": 261,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.422Z",
+                      "startTime": "2026-03-22T07:15:26.109Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -900,7 +984,7 @@
               ],
               "id": "31910af4fc7bd79eb650-34d233d3e4ac6b3fa68a",
               "file": "app-header.spec.ts",
-              "line": 150,
+              "line": 159,
               "column": 7
             },
             {
@@ -916,15 +1000,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 23,
-                      "parallelIndex": 5,
+                      "workerIndex": 25,
+                      "parallelIndex": 1,
                       "status": "passed",
                       "duration": 523,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.494Z",
+                      "startTime": "2026-03-22T07:15:26.151Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -934,7 +1018,7 @@
               ],
               "id": "31910af4fc7bd79eb650-14cad1503bf63de9ecb1",
               "file": "app-header.spec.ts",
-              "line": 167,
+              "line": 176,
               "column": 7
             },
             {
@@ -950,15 +1034,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 24,
-                      "parallelIndex": 2,
+                      "workerIndex": 26,
+                      "parallelIndex": 9,
                       "status": "passed",
-                      "duration": 264,
+                      "duration": 309,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.704Z",
+                      "startTime": "2026-03-22T07:15:26.271Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -968,7 +1052,7 @@
               ],
               "id": "31910af4fc7bd79eb650-6c987fb11a96972e0e7a",
               "file": "app-header.spec.ts",
-              "line": 175,
+              "line": 184,
               "column": 7
             }
           ]
@@ -985,7 +1069,7 @@
         {
           "title": "Unauthenticated access → 401",
           "file": "auth-security.spec.ts",
-          "line": 16,
+          "line": 27,
           "column": 6,
           "specs": [
             {
@@ -1001,15 +1085,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 12,
-                      "parallelIndex": 2,
+                      "workerIndex": 15,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 28,
+                      "duration": 25,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.849Z",
+                      "startTime": "2026-03-22T07:15:25.315Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1019,7 +1103,7 @@
               ],
               "id": "b7647474fbd1a30381b1-ecd0b173016e217c9c21",
               "file": "auth-security.spec.ts",
-              "line": 17,
+              "line": 28,
               "column": 7
             },
             {
@@ -1035,15 +1119,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 7,
-                      "parallelIndex": 7,
+                      "workerIndex": 14,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 81,
+                      "duration": 28,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.192Z",
+                      "startTime": "2026-03-22T07:15:25.274Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1053,7 +1137,7 @@
               ],
               "id": "b7647474fbd1a30381b1-46e24bced80d59371a12",
               "file": "auth-security.spec.ts",
-              "line": 24,
+              "line": 35,
               "column": 7
             },
             {
@@ -1069,15 +1153,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 6,
-                      "parallelIndex": 6,
+                      "workerIndex": 10,
+                      "parallelIndex": 10,
                       "status": "passed",
-                      "duration": 29,
+                      "duration": 73,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.254Z",
+                      "startTime": "2026-03-22T07:15:24.639Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1087,7 +1171,7 @@
               ],
               "id": "b7647474fbd1a30381b1-0f7e688ac93bc50d1461",
               "file": "auth-security.spec.ts",
-              "line": 33,
+              "line": 44,
               "column": 7
             }
           ]
@@ -1095,7 +1179,7 @@
         {
           "title": "Role enforcement",
           "file": "auth-security.spec.ts",
-          "line": 43,
+          "line": 54,
           "column": 6,
           "specs": [
             {
@@ -1111,15 +1195,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
                       "status": "passed",
-                      "duration": 219,
+                      "duration": 169,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.284Z",
+                      "startTime": "2026-03-22T07:15:24.654Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1129,7 +1213,7 @@
               ],
               "id": "b7647474fbd1a30381b1-ebb24f8d4e5c486a2076",
               "file": "auth-security.spec.ts",
-              "line": 44,
+              "line": 55,
               "column": 7
             },
             {
@@ -1145,15 +1229,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 7,
-                      "parallelIndex": 7,
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 150,
+                      "duration": 260,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.283Z",
+                      "startTime": "2026-03-22T07:15:24.705Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1163,7 +1247,7 @@
               ],
               "id": "b7647474fbd1a30381b1-1ac9673990880fb8d875",
               "file": "auth-security.spec.ts",
-              "line": 57,
+              "line": 68,
               "column": 7
             }
           ]
@@ -1171,7 +1255,7 @@
         {
           "title": "Session lifecycle",
           "file": "auth-security.spec.ts",
-          "line": 76,
+          "line": 87,
           "column": 6,
           "specs": [
             {
@@ -1187,15 +1271,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 6,
-                      "parallelIndex": 6,
+                      "workerIndex": 10,
+                      "parallelIndex": 10,
                       "status": "passed",
-                      "duration": 202,
+                      "duration": 246,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.299Z",
+                      "startTime": "2026-03-22T07:15:24.721Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1205,7 +1289,7 @@
               ],
               "id": "b7647474fbd1a30381b1-ba12b983ecb7e6aa8560",
               "file": "auth-security.spec.ts",
-              "line": 77,
+              "line": 88,
               "column": 7
             }
           ]
@@ -1213,7 +1297,7 @@
         {
           "title": "Credential validation",
           "file": "auth-security.spec.ts",
-          "line": 105,
+          "line": 116,
           "column": 6,
           "specs": [
             {
@@ -1229,15 +1313,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 14,
-                      "parallelIndex": 1,
+                      "workerIndex": 8,
+                      "parallelIndex": 8,
                       "status": "passed",
-                      "duration": 82,
+                      "duration": 204,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:39.067Z",
+                      "startTime": "2026-03-22T07:15:24.749Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1247,7 +1331,7 @@
               ],
               "id": "b7647474fbd1a30381b1-16b4ce791cf14313d771",
               "file": "auth-security.spec.ts",
-              "line": 106,
+              "line": 117,
               "column": 7
             },
             {
@@ -1263,15 +1347,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 9,
-                      "parallelIndex": 9,
+                      "workerIndex": 16,
+                      "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 149,
+                      "duration": 25,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.352Z",
+                      "startTime": "2026-03-22T07:15:25.468Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1281,7 +1365,7 @@
               ],
               "id": "b7647474fbd1a30381b1-355ae941dce27e893e70",
               "file": "auth-security.spec.ts",
-              "line": 113,
+              "line": 124,
               "column": 7
             },
             {
@@ -1297,15 +1381,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 8,
-                      "parallelIndex": 8,
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
                       "status": "passed",
-                      "duration": 97,
+                      "duration": 59,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.412Z",
+                      "startTime": "2026-03-22T07:15:24.830Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1315,7 +1399,7 @@
               ],
               "id": "b7647474fbd1a30381b1-1c1f530b4981e4994b61",
               "file": "auth-security.spec.ts",
-              "line": 120,
+              "line": 131,
               "column": 7
             },
             {
@@ -1331,15 +1415,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
-                      "parallelIndex": 4,
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
                       "status": "passed",
-                      "duration": 93,
+                      "duration": 62,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.418Z",
+                      "startTime": "2026-03-22T07:15:24.897Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1349,7 +1433,269 @@
               ],
               "id": "b7647474fbd1a30381b1-fff095c249ec3d84b375",
               "file": "auth-security.spec.ts",
-              "line": 127,
+              "line": 138,
+              "column": 7
+            }
+          ]
+        },
+        {
+          "title": "POST /api/evaluate — admin-only access",
+          "file": "auth-security.spec.ts",
+          "line": 150,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Unauthenticated request → 401",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 8,
+                      "status": "passed",
+                      "duration": 11,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:24.960Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b7647474fbd1a30381b1-ccb1f95e55312d76bc9b",
+              "file": "auth-security.spec.ts",
+              "line": 151,
+              "column": 7
+            },
+            {
+              "title": "Candidate session → POST /api/evaluate → 401",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
+                      "status": "passed",
+                      "duration": 80,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:24.968Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b7647474fbd1a30381b1-c6d9e91dac3c3eb33e76",
+              "file": "auth-security.spec.ts",
+              "line": 158,
+              "column": 7
+            }
+          ]
+        },
+        {
+          "title": "Environments API — authentication enforced",
+          "file": "auth-security.spec.ts",
+          "line": 177,
+          "column": 6,
+          "specs": [
+            {
+              "title": "POST /api/environments without session → 401",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 62,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:24.975Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b7647474fbd1a30381b1-112efedb62201fe39e36",
+              "file": "auth-security.spec.ts",
+              "line": 178,
+              "column": 7
+            },
+            {
+              "title": "GET /api/environments without session → 401",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 10,
+                      "status": "passed",
+                      "duration": 59,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:24.976Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b7647474fbd1a30381b1-7c1a30c0e2b1dfacfda4",
+              "file": "auth-security.spec.ts",
+              "line": 185,
+              "column": 7
+            },
+            {
+              "title": "DELETE /api/environments without session → 401",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 8,
+                      "status": "passed",
+                      "duration": 57,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:24.981Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b7647474fbd1a30381b1-b432948fb47547627356",
+              "file": "auth-security.spec.ts",
+              "line": 190,
+              "column": 7
+            }
+          ]
+        },
+        {
+          "title": "POST /api/validation/events — header-based auth",
+          "file": "auth-security.spec.ts",
+          "line": 202,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Request without X-Codespace-Name header → 401",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 10,
+                      "status": "passed",
+                      "duration": 12,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:25.044Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b7647474fbd1a30381b1-81a3d90f59046ca868ce",
+              "file": "auth-security.spec.ts",
+              "line": 203,
+              "column": 7
+            },
+            {
+              "title": "Request with forged/unknown X-Codespace-Name → 401",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 11,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:25.045Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b7647474fbd1a30381b1-c50635dbd2f577f37248",
+              "file": "auth-security.spec.ts",
+              "line": 215,
               "column": 7
             }
           ]
@@ -1382,15 +1728,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 10,
-                      "parallelIndex": 10,
+                      "workerIndex": 8,
+                      "parallelIndex": 8,
                       "status": "passed",
-                      "duration": 162,
+                      "duration": 97,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.440Z",
+                      "startTime": "2026-03-22T07:15:25.046Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1416,15 +1762,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 7,
-                      "parallelIndex": 7,
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
                       "status": "passed",
-                      "duration": 55,
+                      "duration": 61,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.441Z",
+                      "startTime": "2026-03-22T07:15:25.057Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1450,15 +1796,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 7,
-                      "parallelIndex": 7,
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 11,
+                      "duration": 57,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:38.502Z",
+                      "startTime": "2026-03-22T07:15:25.065Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1494,15 +1840,15 @@
               "projectName": "auth-flows",
               "results": [
                 {
-                  "workerIndex": 25,
+                  "workerIndex": 27,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 262,
+                  "duration": 255,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-03-22T06:50:40.785Z",
+                  "startTime": "2026-03-22T07:15:27.502Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1536,15 +1882,15 @@
                   "projectName": "auth-flows",
                   "results": [
                     {
-                      "workerIndex": 26,
+                      "workerIndex": 28,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 555,
+                      "duration": 546,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:40.766Z",
+                      "startTime": "2026-03-22T07:15:27.504Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1570,15 +1916,15 @@
                   "projectName": "auth-flows",
                   "results": [
                     {
-                      "workerIndex": 27,
+                      "workerIndex": 29,
                       "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 497,
+                      "duration": 560,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:40.803Z",
+                      "startTime": "2026-03-22T07:15:27.486Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1604,15 +1950,15 @@
                   "projectName": "auth-flows",
                   "results": [
                     {
-                      "workerIndex": 28,
+                      "workerIndex": 30,
                       "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 438,
+                      "duration": 474,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:40.798Z",
+                      "startTime": "2026-03-22T07:15:27.525Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1635,7 +1981,7 @@
           "specs": [
             {
               "title": "Navigate to /candidate → candidate-portal visible",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -1646,55 +1992,20 @@
                   "projectName": "auth-flows",
                   "results": [
                     {
-                      "workerIndex": 29,
+                      "workerIndex": 31,
                       "parallelIndex": 4,
-                      "status": "failed",
-                      "duration": 15288,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-testid=\"candidate-portal\"]')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"candidate-portal\"]')\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-testid=\"candidate-portal\"]')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"candidate-portal\"]')\u001b[22m\n\n    at /workspace/specs/auth-flow.spec.ts:113:7",
-                        "location": {
-                          "file": "/workspace/specs/auth-flow.spec.ts",
-                          "column": 7,
-                          "line": 113
-                        },
-                        "snippet": "  111 |     await expect(\n  112 |       page.locator('[data-testid=\"candidate-portal\"]')\n> 113 |     ).toBeVisible({ timeout: 15_000 });\n      |       ^\n  114 |   });\n  115 | });\n  116 |"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/workspace/specs/auth-flow.spec.ts",
-                            "column": 7,
-                            "line": 113
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-testid=\"candidate-portal\"]')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"candidate-portal\"]')\u001b[22m\n\n\n  111 |     await expect(\n  112 |       page.locator('[data-testid=\"candidate-portal\"]')\n> 113 |     ).toBeVisible({ timeout: 15_000 });\n      |       ^\n  114 |   });\n  115 | });\n  116 |\n    at /workspace/specs/auth-flow.spec.ts:113:7"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 303,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:40.796Z",
+                      "startTime": "2026-03-22T07:15:27.498Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/workspace/test-results/auth-flow-Candidate-portal-e5188--→-candidate-portal-visible-auth-flows/test-failed-1.png"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/workspace/test-results/auth-flow-Candidate-portal-e5188--→-candidate-portal-visible-auth-flows/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/workspace/specs/auth-flow.spec.ts",
-                        "column": 7,
-                        "line": 113
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "df6b40174562c70df515-23473109ec0e1fcbde4d",
@@ -1723,15 +2034,15 @@
                   "projectName": "auth-flows",
                   "results": [
                     {
-                      "workerIndex": 30,
+                      "workerIndex": 32,
                       "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 433,
+                      "duration": 537,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:40.775Z",
+                      "startTime": "2026-03-22T07:15:27.523Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1765,15 +2076,15 @@
                   "projectName": "auth-flows",
                   "results": [
                     {
-                      "workerIndex": 31,
+                      "workerIndex": 33,
                       "parallelIndex": 6,
                       "status": "passed",
-                      "duration": 322,
+                      "duration": 436,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:40.802Z",
+                      "startTime": "2026-03-22T07:15:27.539Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1783,7 +2094,7 @@
               ],
               "id": "df6b40174562c70df515-ca45e3d6e85bf1867fb2",
               "file": "auth-flow.spec.ts",
-              "line": 143,
+              "line": 145,
               "column": 7
             }
           ]
@@ -1816,15 +2127,15 @@
                   "projectName": "exam-flows",
                   "results": [
                     {
-                      "workerIndex": 32,
+                      "workerIndex": 34,
                       "parallelIndex": 7,
                       "status": "passed",
-                      "duration": 128,
+                      "duration": 37,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:40.799Z",
+                      "startTime": "2026-03-22T07:15:27.517Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1850,15 +2161,15 @@
                   "projectName": "exam-flows",
                   "results": [
                     {
-                      "workerIndex": 32,
+                      "workerIndex": 34,
                       "parallelIndex": 7,
                       "status": "passed",
-                      "duration": 330,
+                      "duration": 362,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:41.272Z",
+                      "startTime": "2026-03-22T07:15:27.867Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1884,15 +2195,15 @@
                   "projectName": "exam-flows",
                   "results": [
                     {
-                      "workerIndex": 32,
+                      "workerIndex": 34,
                       "parallelIndex": 7,
                       "status": "passed",
-                      "duration": 33,
+                      "duration": 31,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:41.607Z",
+                      "startTime": "2026-03-22T07:15:28.234Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1918,15 +2229,15 @@
                   "projectName": "exam-flows",
                   "results": [
                     {
-                      "workerIndex": 32,
+                      "workerIndex": 34,
                       "parallelIndex": 7,
                       "status": "passed",
-                      "duration": 5870,
+                      "duration": 5873,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:41.645Z",
+                      "startTime": "2026-03-22T07:15:28.270Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1952,15 +2263,15 @@
                   "projectName": "exam-flows",
                   "results": [
                     {
-                      "workerIndex": 32,
+                      "workerIndex": 34,
                       "parallelIndex": 7,
                       "status": "passed",
-                      "duration": 130,
+                      "duration": 124,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:47.520Z",
+                      "startTime": "2026-03-22T07:15:34.148Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1986,15 +2297,15 @@
                   "projectName": "exam-flows",
                   "results": [
                     {
-                      "workerIndex": 32,
+                      "workerIndex": 34,
                       "parallelIndex": 7,
                       "status": "passed",
-                      "duration": 3061,
+                      "duration": 3059,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-03-22T06:50:47.656Z",
+                      "startTime": "2026-03-22T07:15:34.277Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2010,15 +2321,192 @@
           ]
         }
       ]
+    },
+    {
+      "title": "a11y.spec.ts",
+      "file": "a11y.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "a11y: Login page (/)",
+          "file": "a11y.spec.ts",
+          "line": 32,
+          "column": 6,
+          "specs": [
+            {
+              "title": "no accessibility violations on the login page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "a11y",
+                  "projectName": "a11y",
+                  "results": [
+                    {
+                      "workerIndex": 35,
+                      "parallelIndex": 8,
+                      "status": "passed",
+                      "duration": 804,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:27.593Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa3ad05f8c0e05077efb-c8eaa6adb8f2e7f09761",
+              "file": "a11y.spec.ts",
+              "line": 33,
+              "column": 7
+            }
+          ]
+        },
+        {
+          "title": "a11y: Candidate portal (/candidate)",
+          "file": "a11y.spec.ts",
+          "line": 55,
+          "column": 6,
+          "specs": [
+            {
+              "title": "no accessibility violations on the candidate portal",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "a11y",
+                  "projectName": "a11y",
+                  "results": [
+                    {
+                      "workerIndex": 36,
+                      "parallelIndex": 9,
+                      "status": "passed",
+                      "duration": 671,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:27.524Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa3ad05f8c0e05077efb-51ce01e6ee3a20c95dca",
+              "file": "a11y.spec.ts",
+              "line": 60,
+              "column": 7
+            }
+          ]
+        },
+        {
+          "title": "a11y: Admin dashboard (/admin)",
+          "file": "a11y.spec.ts",
+          "line": 84,
+          "column": 6,
+          "specs": [
+            {
+              "title": "no accessibility violations on the admin dashboard",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "a11y",
+                  "projectName": "a11y",
+                  "results": [
+                    {
+                      "workerIndex": 37,
+                      "parallelIndex": 10,
+                      "status": "passed",
+                      "duration": 913,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:27.523Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa3ad05f8c0e05077efb-4d396bb1de896e64e884",
+              "file": "a11y.spec.ts",
+              "line": 89,
+              "column": 7
+            }
+          ]
+        },
+        {
+          "title": "a11y: Exam MC phase (/exam)",
+          "file": "a11y.spec.ts",
+          "line": 122,
+          "column": 6,
+          "specs": [
+            {
+              "title": "no accessibility violations on the exam MC phase",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "a11y",
+                  "projectName": "a11y",
+                  "results": [
+                    {
+                      "workerIndex": 38,
+                      "parallelIndex": 11,
+                      "status": "passed",
+                      "duration": 1018,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-22T07:15:27.566Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa3ad05f8c0e05077efb-b049e676ecc9b7e2aec8",
+              "file": "a11y.spec.ts",
+              "line": 127,
+              "column": 7
+            }
+          ]
+        }
+      ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-03-22T06:50:32.106Z",
-    "duration": 24099.479,
-    "expected": 47,
+    "startTime": "2026-03-22T07:15:18.313Z",
+    "duration": 19127.793,
+    "expected": 61,
     "skipped": 1,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }

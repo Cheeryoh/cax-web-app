@@ -136,8 +136,10 @@ test.describe("Admin dashboard — authenticated", () => {
 // ---------------------------------------------------------------------------
 
 test.describe("Logout flow", () => {
+  // Uses its own isolated session — the logout test DESTROYS this session,
+  // so it must NOT share with any other test (see Playwright Test Isolation rule)
   test.use({
-    storageState: path.join(__dirname, ".auth/candidate.json"),
+    storageState: path.join(__dirname, ".auth/candidate-logout.json"),
   });
 
   test("DELETE /api/auth → session invalidated", async ({ page }) => {

@@ -55,7 +55,8 @@
     "source=cax-claude-config,target=/home/node/.claude,type=volume"
   ],
   "containerEnv": {
-    "NODE_ENV": "development"
+    "NODE_ENV": "development",
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
   },
   "postCreateCommand": "sudo chown -R node:node /home/node/.claude && git config --global --add safe.directory /workspace && mkdir -p ~/.config/powershell && echo 'Set-Location /workspace\n$env:PATH += \":/home/node/.local/bin\"' > ~/.config/powershell/Microsoft.PowerShell_profile.ps1 && cp /workspace/.devcontainer/claude-settings.json ~/.claude/settings.json && curl -fsSL https://claude.ai/install.sh | bash && echo 'Dev container ready!'"
 }

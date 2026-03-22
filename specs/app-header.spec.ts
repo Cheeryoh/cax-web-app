@@ -89,12 +89,21 @@ test.describe("AppHeader — authenticated", () => {
   test("shows display name, role badge, and logout button", async ({
     page,
   }) => {
-    // This test asserts display-name visibility — only valid on desktop viewport
-    // (sm breakpoint = 640px). Skip on narrow viewports where it's intentionally hidden.
+    // INTENTIONAL SKIP GUARD: This test asserts that display-name IS visible —
+    // which is only true on desktop viewports (sm breakpoint = 640px).
+    // On narrow viewports the element has Tailwind class `hidden sm:inline`,
+    // so it is intentionally not visible. The skip fires only when this test
+    // is executed under a narrow-viewport project (e.g. the `mobile` project
+    // using Pixel 5 at ~393px).
+    //
+    // The corresponding HIDDEN behaviour is covered by the separate test
+    // "display name hidden on mobile viewport" (below), which explicitly sets a
+    // 375px viewport and asserts `toBeHidden()`. That test provides full
+    // mobile coverage without duplication.
     const vp = page.viewportSize();
     test.skip(
       vp !== null && vp.width < 640,
-      "display-name is hidden sm:inline — not visible on mobile viewports"
+      "display-name is hidden sm:inline — not visible on mobile viewports; covered by 'display name hidden on mobile viewport' test"
     );
 
     await page.goto("/");

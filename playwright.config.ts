@@ -63,6 +63,17 @@ export default defineConfig({
     },
 
     // -----------------------------------------------------------------------
+    // Accessibility audit — axe-core full-page scans for all page states.
+    // Uses dedicated candidate-a11y.json session (isolated from exam-flows).
+    // -----------------------------------------------------------------------
+    {
+      name: "a11y",
+      testMatch: "**/a11y.spec.ts",
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
+    },
+
+    // -----------------------------------------------------------------------
     // Mobile project — unauthenticated, covers header mobile tests.
     // -----------------------------------------------------------------------
     {

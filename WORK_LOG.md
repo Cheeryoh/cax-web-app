@@ -113,6 +113,48 @@ Key files created/modified:
 
 Final: `npm run validate` passes. `npx playwright test`: 36 passed, 1 skipped, 0 failed. Stable across consecutive runs.
 
+### Phase 3: Exam Flow + Codespace Integration — COMPLETE
+
+- Environment service: GitHub Codespace CRUD via REST API + mock mode
+- API routes: /api/environments (POST/GET/DELETE), /api/validation/events (webhook)
+- MC questions aligned to template repo (jQuery CVE, analytics, SCSS, Gulp, 4D)
+- Exam page: 3 real tasks + dynamic Codespace status + "Open Codespace" link
+- Template repo updated: CODESPACE_NAME header in hooks, pushed to GitHub
+- Auto-provision Codespace when exam starts (background, non-blocking)
+
+### Phase 4: Broken Repo Template — COMPLETE (pre-existing)
+
+Template repo `Cheeryoh/exam-template-alex-rivera` already had 3 tasks, 7 validation checks.
+
+### Phase 5: Evaluation Engine — COMPLETE
+
+- evaluation-service.ts: deterministic lab scoring + 4D LLM-as-Judge (Claude Haiku)
+- Mock mode returns fixed scores; real mode runs validate.js + Anthropic API
+- Auto-evaluation fires on lab submission (fire-and-forget)
+- /api/evaluate route for admin manual re-evaluation
+- Admin "Run Evaluation" / "Re-Evaluate" buttons
+
+### Phase 6: Polish & QA — COMPLETE
+
+**Accessibility fixes (3 bugs found by axe-core):**
+- Login page missing `<h1>` heading → added native `<h1>`
+- Destructive badge contrast failure (3.62:1) → changed to `bg-destructive text-white` (5.32:1)
+- Inline link color contrast failure (2.86:1) → added `--link` variable with darker terracotta
+
+**Test isolation fix:**
+- Auth-flow candidate portal test was failing due to shared session with logout test
+- Fix: created isolated `candidate-logout.json` session for the logout test
+
+**Security tests added (7 new):**
+- /api/evaluate unauthenticated → 401, candidate → 401
+- /api/environments without session → 401 (POST, GET, DELETE)
+- /api/validation/events without X-Codespace-Name → 401, unknown name → 401
+
+**Final test counts:**
+- Unit tests: 22 (auth: 4, environment: 8, evaluation: 10)
+- Playwright E2E: 61 passed, 1 skipped (intentional), 0 failures
+- Coverage: auth flows, security, exam flow, validation events, accessibility, visual
+
 ### Agent Expansion: Parallel Issue Resolution Teams
 
 **Decision:** Expand from 3 agents to 7 agents (+ orchestrator) to enable parallel investigation with diverse approach vectors when issues hit the 3-retry cap.

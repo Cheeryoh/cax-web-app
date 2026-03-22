@@ -119,7 +119,7 @@ export default function ExamPage() {
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/" className="text-primary underline">Return to home</Link>
+            <Link href="/" className="text-link underline">Return to home</Link>
           </CardContent>
         </Card>
       </main>
@@ -324,7 +324,7 @@ export default function ExamPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex gap-3">
-          <Link href="/candidate" className="text-primary underline text-sm">
+          <Link href="/candidate" className="text-link underline text-sm">
             View Results
           </Link>
           <Link href="/" className="text-muted-foreground underline text-sm">

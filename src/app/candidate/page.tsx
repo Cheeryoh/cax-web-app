@@ -70,7 +70,7 @@ export default function CandidatePortal() {
         <Card>
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">No attempts yet.</p>
-            <a href="/exam" className="text-primary underline text-sm mt-2 inline-block">
+            <a href="/exam" className="text-link underline text-sm mt-2 inline-block">
               Start your first assessment
             </a>
           </CardContent>
@@ -128,7 +128,7 @@ export default function CandidatePortal() {
       )}
 
       <div className="mt-6">
-        <a href="/exam" className="text-primary underline text-sm">
+        <a href="/exam" className="text-link underline text-sm">
           Start a new attempt
         </a>
       </div>

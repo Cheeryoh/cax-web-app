@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-03-22T07:00:00.000Z",
-  "pipeline": "step-6-evaluation-engine-tests",
+  "timestamp": "2026-03-22T09:30:00.000Z",
+  "pipeline": "final-quality-audit",
   "results": {
     "lint": {
       "pass": true,
       "errors": [],
-      "notes": "5 pre-existing warnings (unused vars, unused eslint-disable) — 0 errors"
+      "notes": "5 pre-existing warnings (unused vars, unused eslint-disable) — 0 errors. All warnings are in app code, not new test files."
     },
     "typecheck": { "pass": true, "errors": [] },
     "unit": {
@@ -15,45 +15,78 @@
     },
     "build": { "pass": true },
     "e2e": {
-      "pass": false,
-      "summary": "48 passed, 1 failed, 1 skipped (49 total after new test added)",
-      "new_tests_pass": true,
-      "failures": [
+      "pass": true,
+      "summary": "61 passed, 0 failed, 1 skipped (62 total)",
+      "skipped": [
         {
-          "test": "Candidate portal — authenticated › Navigate to /candidate → candidate-portal visible",
-          "file": "specs/auth-flow.spec.ts:109",
-          "error": "element(s) not found — locator('[data-testid=\"candidate-portal\"]') never became visible within 15 s",
-          "root_cause": "PRE-EXISTING: auth-flows project runs tests in parallel. The logout test (line 143) calls DELETE /api/auth on the shared candidate.json session, invalidating it before the /candidate portal test can navigate there. The candidate portal page redirects unauthenticated users, so the testid is never rendered. This bug was introduced in the Phase 2 commit (44b1086) and is not related to Step 6 changes.",
-          "introduced_by": "44b1086 feat: CAX Web App — complete platform through Phase 2 + change request"
+          "test": "[mobile] AppHeader — authenticated › shows display name, role badge, and logout button",
+          "file": "specs/app-header.spec.ts:89",
+          "reason": "INTENTIONAL: test.skip guard activates on narrow viewports (Pixel 5 = 393px). The element has class 'hidden sm:inline' so it is not visible on mobile. The hidden state is correctly tested by the adjacent 'display name hidden on mobile viewport' test which explicitly asserts toBeHidden().",
+          "verdict": "correct-skip — no action required"
+        }
+      ],
+      "failures": []
+    },
+    "visual": { "pass": true, "baselines_updated": 0 },
+    "a11y": {
+      "pass": true,
+      "violations": [],
+      "pages_audited": [
+        "/ (login page — unauthenticated)",
+        "/candidate (candidate portal — authenticated)",
+        "/admin (admin dashboard — authenticated as admin)",
+        "/exam (MC phase — mocked API, authenticated)"
+      ],
+      "bugs_found_and_fixed": [
+        {
+          "page": "/",
+          "rule": "page-has-heading-one",
+          "impact": "moderate",
+          "fix": "Changed <CardTitle>Sign In</CardTitle> (renders as <div>) to a native <h1> with equivalent Tailwind classes in src/app/page.tsx"
+        },
+        {
+          "page": "/candidate (and other pages using text-primary inline links)",
+          "rule": "color-contrast",
+          "impact": "serious",
+          "detail": "Primary color #c4714f on background #e8e5de gives 2.86:1 ratio (needs 4.5:1)",
+          "fix": "Added --link CSS variable (oklch(0.460 0.115 43) — darker terracotta) in globals.css and updated inline link classes from text-primary to text-link in candidate/page.tsx and exam/page.tsx"
+        },
+        {
+          "page": "/candidate (destructive badge)",
+          "rule": "color-contrast",
+          "impact": "serious",
+          "detail": "bg-destructive/10 text-destructive: foreground #e7000b on background #f4dbd6 = 3.62:1 (needs 4.5:1)",
+          "fix": "Changed badge.tsx destructive variant from 'bg-destructive/10 text-destructive' to 'bg-destructive text-white' — white on #e7000b = 5.32:1 (passes WCAG AA)"
         }
       ]
     },
-    "visual": { "pass": true, "baselines_updated": 0 },
-    "a11y": { "pass": true, "violations": [] },
-    "new_tests": {
-      "unit": {
-        "file": "src/lib/evaluation-service.test.ts",
-        "tests": [
-          "evaluateLabResults (mock mode) — inserts 3 lab_results rows for the attempt",
-          "evaluateLabResults (mock mode) — each row has passed === 1",
-          "evaluateLabResults (mock mode) — task IDs include task1_jquery, task2_analytics, task3_branding",
-          "evaluateFluency (mock mode) — inserts a fluency_scores row for the attempt",
-          "evaluateFluency (mock mode) — all four dimensions have scores between 1 and 5",
-          "evaluateFluency (mock mode) — raw_analysis is valid JSON",
-          "runFullEvaluation (mock mode) — sets attempt status to 'evaluated'",
-          "runFullEvaluation (mock mode) — produces 3 lab_results rows",
-          "runFullEvaluation (mock mode) — produces 1 fluency_scores row",
-          "runFullEvaluation (mock mode) — is idempotent — running twice yields 3 lab_results rows and 1 fluency_scores row"
-        ],
-        "result": "10/10 pass"
-      },
-      "e2e_updated": {
-        "file": "specs/exam-flow.spec.ts",
-        "changes": [
-          "New test added after 'Submit lab': 'After lab submission, candidate portal shows lab results and fluency scores (not placeholders)' — waits 3 s for async evaluation, navigates to /candidate, asserts lab tasks cell is not '—', asserts 'Pending' is not visible, asserts all four 4D dimension labels show numeric scores"
-        ],
-        "result": "all 6 exam-flow tests pass (49 total Playwright tests)"
-      }
+    "security": {
+      "pass": true,
+      "coverage": [
+        "Unauthenticated access to protected APIs → 401 (exam, admin)",
+        "Candidate cannot access admin API → 401",
+        "Session invalidation on logout",
+        "Wrong password → 401",
+        "Missing fields → 400",
+        "POST /api/evaluate requires admin role → 401 for unauthenticated and candidate",
+        "POST /api/environments without session → 401",
+        "GET /api/environments without session → 401",
+        "DELETE /api/environments without session → 401",
+        "POST /api/validation/events without X-Codespace-Name → 401",
+        "POST /api/validation/events with unknown codespace name → 401"
+      ]
+    },
+    "new_work": {
+      "specs/a11y.spec.ts": "New file — 4 axe-core full-page accessibility audits covering all page states",
+      "specs/auth-security.spec.ts": "Added 7 new security tests covering evaluate endpoint, environments API, and validation event auth",
+      "specs/auth.setup.ts": "Added candidate-a11y.json session creation for isolated a11y testing",
+      "playwright.config.ts": "Added 'a11y' project with setup dependency",
+      "specs/app-header.spec.ts": "Expanded skip guard comment to document intentional behaviour",
+      "src/app/page.tsx": "Fixed: replaced CardTitle (div) with native h1 for page-has-heading-one compliance",
+      "src/app/globals.css": "Added --link CSS variable (darker terracotta for accessible inline link color)",
+      "src/app/candidate/page.tsx": "Fixed: changed text-primary to text-link on inline nav links",
+      "src/app/exam/page.tsx": "Fixed: changed text-primary to text-link on inline nav links",
+      "src/components/ui/badge.tsx": "Fixed: changed destructive variant from bg-destructive/10 text-destructive to bg-destructive text-white for WCAG AA contrast"
     }
   }
 }

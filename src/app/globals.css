@@ -26,6 +26,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-link: var(--link);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -63,6 +64,7 @@
   --accent: oklch(0.634 0.115 43);           /* same as primary */
   --accent-foreground: oklch(0.122 0.004 70);
   --destructive: oklch(0.577 0.245 27.325);  /* keep existing red */
+  --link: oklch(0.460 0.115 43);             /* darker terracotta for inline links — achieves 4.5:1 on bg */
   --border: oklch(0.849 0.007 80);           /* #d4d3c9 warm gray */
   --input: oklch(0.849 0.007 80);
   --ring: oklch(0.634 0.115 43);             /* terracotta for focus rings */
