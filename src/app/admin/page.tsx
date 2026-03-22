@@ -722,7 +722,7 @@ export default function AdminDashboard() {
                                             <div
                                               key={dim}
                                               data-testid={`dimension-${activeTask}-${dim}`}
-                                              className="bg-background rounded-lg border p-4 flex flex-col gap-3 min-w-0"
+                                              className="bg-background rounded-lg border p-4 flex flex-col gap-3 min-w-0 overflow-hidden"
                                             >
                                               {/* Header */}
                                               <div className="flex items-center justify-between">
