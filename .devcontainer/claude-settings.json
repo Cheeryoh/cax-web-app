@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '\\a'; sleep 0.4; printf '\\a'"
+            "command": "echo stop > /workspace/.claude-notify"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '\\a'"
+            "command": "echo permission > /workspace/.claude-notify"
           }
         ]
       }
