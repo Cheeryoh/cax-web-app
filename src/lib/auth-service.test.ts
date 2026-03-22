@@ -6,11 +6,10 @@ import {
   destroySession,
   seedDemoData,
 } from "./auth-service";
-import { getDb, closeDb } from "./db";
+import { closeDb } from "./db";
 
-// Sessions are now SQLite-backed, so we need a real DB
+// Sessions are now Supabase-backed. These tests require SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
 beforeAll(async () => {
-  getDb(); // Initialize DB + schema
   await seedDemoData(); // Seed a candidate we can reference
 });
 
@@ -28,26 +27,26 @@ describe("generateSessionToken", () => {
 });
 
 describe("createSession / getSession", () => {
-  it("creates a session and retrieves it", () => {
+  it("creates a session and retrieves it", async () => {
     // Use candidate ID 1 (seeded demo candidate)
-    const token = createSession(1);
-    const session = getSession(token);
+    const token = await createSession(1);
+    const session = await getSession(token);
     expect(session).not.toBeNull();
     expect(session).toEqual({ candidateId: 1 });
   });
 });
 
 describe("destroySession", () => {
-  it("destroys a session so it cannot be retrieved", () => {
-    const token = createSession(1);
-    expect(getSession(token)).not.toBeNull();
-    destroySession(token);
-    expect(getSession(token)).toBeNull();
+  it("destroys a session so it cannot be retrieved", async () => {
+    const token = await createSession(1);
+    expect(await getSession(token)).not.toBeNull();
+    await destroySession(token);
+    expect(await getSession(token)).toBeNull();
   });
 });
 
 describe("getSession with unknown token", () => {
-  it("returns null for nonexistent token", () => {
-    expect(getSession("nonexistent")).toBeNull();
+  it("returns null for nonexistent token", async () => {
+    expect(await getSession("nonexistent")).toBeNull();
   });
 });

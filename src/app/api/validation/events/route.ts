@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnvironmentByCodespaceName } from "@/lib/environment-service";
-import { getDb } from "@/lib/db";
+import { getSupabase } from "@/lib/supabase";
 import { z } from "zod";
 
 // POST /api/validation/events — receive Claude Code hook events from a Codespace
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const env = getEnvironmentByCodespaceName(codespaceNameHeader);
+  const env = await getEnvironmentByCodespaceName(codespaceNameHeader);
   if (!env) {
     return NextResponse.json({ error: "Unknown codespace" }, { status: 401 });
   }
@@ -40,11 +40,23 @@ export async function POST(request: NextRequest) {
     data["tool_output"] != null ? JSON.stringify(data["tool_output"]) : null;
   const raw_json = JSON.stringify(data);
 
-  const db = getDb();
-  db.prepare(
-    `INSERT INTO validation_events (attempt_id, event_type, tool_name, tool_input, tool_output, raw_json)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(env.attempt_id, event_type, tool_name, tool_input, tool_output, raw_json);
+  const supabase = getSupabase();
+  const { error } = await supabase.from("validation_events").insert({
+    attempt_id: env.attempt_id,
+    event_type,
+    tool_name,
+    tool_input,
+    tool_output,
+    raw_json,
+  });
+
+  if (error) {
+    console.error("Failed to insert validation event:", error.message);
+    return NextResponse.json(
+      { error: "Failed to record event" },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ received: true });
 }

@@ -8,17 +8,17 @@ import {
 } from "@/lib/environment-service";
 import { z } from "zod";
 
-function getAuthenticatedCandidate(request: NextRequest) {
+async function getAuthenticatedCandidate(request: NextRequest) {
   const token = request.cookies.get("session")?.value;
   if (!token) return null;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return null;
   return getCandidateById(session.candidateId);
 }
 
 // POST /api/environments — create a Codespace for an attempt
 export async function POST(request: NextRequest) {
-  const candidate = getAuthenticatedCandidate(request);
+  const candidate = await getAuthenticatedCandidate(request);
   if (!candidate) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
 // GET /api/environments?attemptId=<n> — poll environment status
 export async function GET(request: NextRequest) {
-  const candidate = getAuthenticatedCandidate(request);
+  const candidate = await getAuthenticatedCandidate(request);
   if (!candidate) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing or invalid attemptId" }, { status: 400 });
   }
 
-  const env = getEnvironmentByAttempt(attemptId);
+  const env = await getEnvironmentByAttempt(attemptId);
   if (!env) {
     return NextResponse.json({ error: "Environment not found" }, { status: 404 });
   }
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
 // DELETE /api/environments — destroy a Codespace for an attempt
 export async function DELETE(request: NextRequest) {
-  const candidate = getAuthenticatedCandidate(request);
+  const candidate = await getAuthenticatedCandidate(request);
   if (!candidate) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -81,7 +81,7 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  const env = getEnvironmentByAttempt(parsed.data.attemptId);
+  const env = await getEnvironmentByAttempt(parsed.data.attemptId);
   if (!env) {
     return NextResponse.json({ error: "Environment not found" }, { status: 404 });
   }

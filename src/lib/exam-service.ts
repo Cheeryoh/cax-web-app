@@ -1,4 +1,4 @@
-import { getDb } from "./db";
+import { getSupabase } from "./supabase";
 import fs from "fs";
 import path from "path";
 
@@ -59,99 +59,154 @@ export interface Question {
   correctAnswer: string;
 }
 
+// Reads local JSON file — stays synchronous, no DB involved
 export function getQuestions(): Question[] {
   const filePath = path.join(process.cwd(), "data", "questions.json");
   const raw = fs.readFileSync(filePath, "utf-8");
   return JSON.parse(raw).questions;
 }
 
-export function createAttempt(candidateId: number): Attempt {
-  const db = getDb();
-  const result = db
-    .prepare("INSERT INTO attempts (candidate_id) VALUES (?)")
-    .run(candidateId);
-  return db
-    .prepare("SELECT * FROM attempts WHERE id = ?")
-    .get(result.lastInsertRowid) as Attempt;
+export async function createAttempt(candidateId: number): Promise<Attempt> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("attempts")
+    .insert({ candidate_id: candidateId })
+    .select()
+    .single();
+
+  if (error) throw new Error(`createAttempt failed: ${error.message}`);
+  return data as Attempt;
 }
 
-export function getAttempt(attemptId: number): Attempt | null {
-  const db = getDb();
-  return (db.prepare("SELECT * FROM attempts WHERE id = ?").get(attemptId) as Attempt | undefined) ?? null;
+export async function getAttempt(attemptId: number): Promise<Attempt | null> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("attempts")
+    .select("*")
+    .eq("id", attemptId)
+    .maybeSingle();
+
+  if (error) throw new Error(`getAttempt failed: ${error.message}`);
+  return (data as Attempt | null) ?? null;
 }
 
-export function getAttemptsByCandidate(candidateId: number): Attempt[] {
-  const db = getDb();
-  return db
-    .prepare("SELECT * FROM attempts WHERE candidate_id = ? ORDER BY started_at DESC")
-    .all(candidateId) as Attempt[];
+export async function getAttemptsByCandidate(
+  candidateId: number
+): Promise<Attempt[]> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("attempts")
+    .select("*")
+    .eq("candidate_id", candidateId)
+    .order("started_at", { ascending: false });
+
+  if (error) throw new Error(`getAttemptsByCandidate failed: ${error.message}`);
+  return (data ?? []) as Attempt[];
 }
 
-export function updateAttemptStatus(attemptId: number, status: string): void {
-  const db = getDb();
+export async function updateAttemptStatus(
+  attemptId: number,
+  status: string
+): Promise<void> {
+  const supabase = getSupabase();
+
+  const updateData: Record<string, unknown> = { status };
   if (status === "submitted" || status === "evaluated") {
-    db.prepare("UPDATE attempts SET status = ?, completed_at = datetime('now') WHERE id = ?").run(status, attemptId);
-  } else {
-    db.prepare("UPDATE attempts SET status = ? WHERE id = ?").run(status, attemptId);
+    updateData.completed_at = new Date().toISOString();
   }
+
+  const { error } = await supabase
+    .from("attempts")
+    .update(updateData)
+    .eq("id", attemptId);
+
+  if (error) throw new Error(`updateAttemptStatus failed: ${error.message}`);
 }
 
-export function submitMcAnswers(
+export async function submitMcAnswers(
   attemptId: number,
   answers: { questionId: string; selectedAnswer: string }[]
-): { correct: number; total: number } {
-  const db = getDb();
+): Promise<{ correct: number; total: number }> {
+  const supabase = getSupabase();
   const questions = getQuestions();
   let correct = 0;
 
-  const insert = db.prepare(
-    "INSERT INTO mc_answers (attempt_id, question_id, selected_answer, is_correct) VALUES (?, ?, ?, ?)"
-  );
-
-  const insertMany = db.transaction((items: typeof answers) => {
-    for (const answer of items) {
-      const question = questions.find((q) => q.id === answer.questionId);
-      const isCorrect = question?.correctAnswer === answer.selectedAnswer ? 1 : 0;
-      if (isCorrect) correct++;
-      insert.run(attemptId, answer.questionId, answer.selectedAnswer, isCorrect);
-    }
+  const rows = answers.map((answer) => {
+    const question = questions.find((q) => q.id === answer.questionId);
+    const isCorrect = question?.correctAnswer === answer.selectedAnswer ? 1 : 0;
+    if (isCorrect) correct++;
+    return {
+      attempt_id: attemptId,
+      question_id: answer.questionId,
+      selected_answer: answer.selectedAnswer,
+      is_correct: isCorrect,
+    };
   });
 
-  insertMany(answers);
+  const { error } = await supabase.from("mc_answers").insert(rows);
+  if (error) throw new Error(`submitMcAnswers failed: ${error.message}`);
+
   return { correct, total: answers.length };
 }
 
-export function getMcAnswers(attemptId: number): McAnswer[] {
-  const db = getDb();
-  return db
-    .prepare("SELECT * FROM mc_answers WHERE attempt_id = ?")
-    .all(attemptId) as McAnswer[];
+export async function getMcAnswers(attemptId: number): Promise<McAnswer[]> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("mc_answers")
+    .select("*")
+    .eq("attempt_id", attemptId);
+
+  if (error) throw new Error(`getMcAnswers failed: ${error.message}`);
+  return (data ?? []) as McAnswer[];
 }
 
-export function getLabResults(attemptId: number): LabResult[] {
-  const db = getDb();
-  return db
-    .prepare("SELECT * FROM lab_results WHERE attempt_id = ?")
-    .all(attemptId) as LabResult[];
+export async function getLabResults(attemptId: number): Promise<LabResult[]> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("lab_results")
+    .select("*")
+    .eq("attempt_id", attemptId);
+
+  if (error) throw new Error(`getLabResults failed: ${error.message}`);
+  return (data ?? []) as LabResult[];
 }
 
-export function getFluencyScore(attemptId: number): FluencyScore | null {
-  const db = getDb();
-  return (
-    db
-      .prepare("SELECT * FROM fluency_scores WHERE attempt_id = ?")
-      .get(attemptId) as FluencyScore | undefined
-  ) ?? null;
+export async function getFluencyScore(
+  attemptId: number
+): Promise<FluencyScore | null> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("fluency_scores")
+    .select("*")
+    .eq("attempt_id", attemptId)
+    .maybeSingle();
+
+  if (error) throw new Error(`getFluencyScore failed: ${error.message}`);
+  return (data as FluencyScore | null) ?? null;
 }
 
-export function getAdminReviews(attemptId: number): AdminReview[] {
-  const db = getDb();
-  return db
-    .prepare("SELECT * FROM admin_reviews WHERE attempt_id = ? ORDER BY dimension")
-    .all(attemptId) as AdminReview[];
+export async function getAdminReviews(
+  attemptId: number
+): Promise<AdminReview[]> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("admin_reviews")
+    .select("*")
+    .eq("attempt_id", attemptId)
+    .order("dimension", { ascending: true });
+
+  if (error) throw new Error(`getAdminReviews failed: ${error.message}`);
+  return (data ?? []) as AdminReview[];
 }
 
-export function upsertAdminReview(
+export async function upsertAdminReview(
   attemptId: number,
   reviewerId: number,
   dimension: string,
@@ -159,23 +214,42 @@ export function upsertAdminReview(
   adjustedScore: number,
   weight: number,
   comment: string | null
-): AdminReview {
-  const db = getDb();
-  db.prepare(
-    `INSERT OR REPLACE INTO admin_reviews
-      (attempt_id, reviewer_id, dimension, original_score, adjusted_score, weight, comment)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(attemptId, reviewerId, dimension, originalScore, adjustedScore, weight, comment);
-  return db
-    .prepare("SELECT * FROM admin_reviews WHERE attempt_id = ? AND dimension = ?")
-    .get(attemptId, dimension) as AdminReview;
+): Promise<AdminReview> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("admin_reviews")
+    .upsert(
+      {
+        attempt_id: attemptId,
+        reviewer_id: reviewerId,
+        dimension,
+        original_score: originalScore,
+        adjusted_score: adjustedScore,
+        weight,
+        comment,
+      },
+      { onConflict: "attempt_id,dimension" }
+    )
+    .select()
+    .single();
+
+  if (error) throw new Error(`upsertAdminReview failed: ${error.message}`);
+  return data as AdminReview;
 }
 
-export function completeReview(attemptId: number, finalResult: "pass" | "fail"): void {
-  const db = getDb();
-  db.prepare(
-    "UPDATE attempts SET human_reviewed = 1, final_result = ? WHERE id = ?"
-  ).run(finalResult, attemptId);
+export async function completeReview(
+  attemptId: number,
+  finalResult: "pass" | "fail"
+): Promise<void> {
+  const supabase = getSupabase();
+
+  const { error } = await supabase
+    .from("attempts")
+    .update({ human_reviewed: 1, final_result: finalResult })
+    .eq("id", attemptId);
+
+  if (error) throw new Error(`completeReview failed: ${error.message}`);
 }
 
 export interface AttemptSummary {
@@ -187,16 +261,18 @@ export interface AttemptSummary {
   passed: boolean;
 }
 
-export function getAttemptSummary(attemptId: number): AttemptSummary | null {
-  const attempt = getAttempt(attemptId);
+export async function getAttemptSummary(
+  attemptId: number
+): Promise<AttemptSummary | null> {
+  const attempt = await getAttempt(attemptId);
   if (!attempt) return null;
 
-  const mcAnswers = getMcAnswers(attemptId);
+  const mcAnswers = await getMcAnswers(attemptId);
   const mcCorrect = mcAnswers.filter((a) => a.is_correct).length;
-  const labResults = getLabResults(attemptId);
+  const labResults = await getLabResults(attemptId);
   const labPassed = labResults.filter((r) => r.passed).length;
-  const fluencyScore = getFluencyScore(attemptId);
-  const adminReviews = getAdminReviews(attemptId);
+  const fluencyScore = await getFluencyScore(attemptId);
+  const adminReviews = await getAdminReviews(attemptId);
 
   const fluencyAvg = fluencyScore
     ? ((fluencyScore.delegation ?? 0) +

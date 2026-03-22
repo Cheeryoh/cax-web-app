@@ -22,3 +22,5 @@ data/cax.db-shm
 data/cax.db-wal
 playwright-report/
 cax-app/
+test-results/
+tsconfig.tsbuildinfo

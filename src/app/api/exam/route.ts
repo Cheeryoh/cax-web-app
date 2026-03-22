@@ -11,17 +11,17 @@ import {
 import { createEnvironment } from "@/lib/environment-service";
 import { runFullEvaluation } from "@/lib/evaluation-service";
 
-function getAuthenticatedCandidate(request: NextRequest) {
+async function getAuthenticatedCandidate(request: NextRequest) {
   const token = request.cookies.get("session")?.value;
   if (!token) return null;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return null;
   return getCandidateById(session.candidateId);
 }
 
 // GET /api/exam — get questions or attempt history
 export async function GET(request: NextRequest) {
-  const candidate = getAuthenticatedCandidate(request);
+  const candidate = await getAuthenticatedCandidate(request);
   if (!candidate) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (action === "attempts") {
-    const attempts = getAttemptsByCandidate(candidate.id);
-    const summaries = attempts.map((a) => getAttemptSummary(a.id));
+    const attempts = await getAttemptsByCandidate(candidate.id);
+    const summaries = await Promise.all(attempts.map((a) => getAttemptSummary(a.id)));
     return NextResponse.json({ attempts: summaries });
   }
 
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/exam — create attempt or submit answers
 export async function POST(request: NextRequest) {
-  const candidate = getAuthenticatedCandidate(request);
+  const candidate = await getAuthenticatedCandidate(request);
   if (!candidate) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   const { action } = body;
 
   if (action === "start") {
-    const attempt = createAttempt(candidate.id);
+    const attempt = await createAttempt(candidate.id);
     const env = await createEnvironment(attempt.id).catch(() => null);
     return NextResponse.json({ attempt, environment: env });
   }
@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
     if (!attemptId || !answers) {
       return NextResponse.json({ error: "Missing attemptId or answers" }, { status: 400 });
     }
-    const result = submitMcAnswers(attemptId, answers);
-    updateAttemptStatus(attemptId, "mc_completed");
+    const result = await submitMcAnswers(attemptId, answers);
+    await updateAttemptStatus(attemptId, "mc_completed");
     return NextResponse.json({ result });
   }
 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     if (!attemptId) {
       return NextResponse.json({ error: "Missing attemptId" }, { status: 400 });
     }
-    updateAttemptStatus(attemptId, "submitted");
+    await updateAttemptStatus(attemptId, "submitted");
     // Fire-and-forget: run evaluation asynchronously after submission
     runFullEvaluation(attemptId).catch((err) =>
       console.error("Auto-evaluation failed:", err)

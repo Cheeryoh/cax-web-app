@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = createSession(candidate.id);
+    const token = await createSession(candidate.id);
     const redirectUrl = candidate.role === "admin" ? "/admin" : "/candidate";
 
     const response = NextResponse.json({
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     response.cookies.set("session", token, {
       httpOnly: true,
-      secure: false, // demo: no HTTPS
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24, // 24 hours
       path: "/",
@@ -63,12 +63,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
-  const candidate = getCandidateById(session.candidateId);
+  const candidate = await getCandidateById(session.candidateId);
   if (!candidate) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const token = request.cookies.get("session")?.value;
   if (token) {
-    destroySession(token);
+    await destroySession(token);
   }
 
   const response = NextResponse.json({ success: true });

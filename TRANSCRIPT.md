@@ -219,3 +219,58 @@ GitHub API doesn't support per-Codespace env vars at creation. Solution for 4 co
 6. Exam API: Auto-provision Codespace on exam start (non-blocking)
 7. Template repo: Updated hooks to send `CODESPACE_NAME` header, pushed to GitHub
 8. Tests: Pending (QA agent next)
+
+### Phase 5: Evaluation Engine — COMPLETE
+- evaluation-service.ts: deterministic + 4D LLM-as-Judge (Claude Haiku)
+- Auto-evaluation on lab submit + admin manual re-evaluation
+- 10 new unit tests, E2E candidate portal shows scores after submission
+
+### Phase 6: Polish & QA — COMPLETE
+- 3 accessibility bugs fixed (missing h1, destructive badge contrast, inline link contrast)
+- Auth-flow candidate portal test fixed (isolated candidate-logout.json session)
+- 7 new security tests (evaluate + environments + validation endpoints)
+- Final: 22 unit tests, 61 Playwright E2E, 0 failures
+
+---
+
+## Session 5 — 2026-03-22: Production Deployment Planning
+
+### User Request
+"Let's make this live. Let's go ahead and package this up to push into GitHub, to make ready for live demo on Vercel domain."
+
+### Critical Blockers Identified
+
+| Blocker | Impact | Solution |
+|---------|--------|----------|
+| SQLite on Vercel (ephemeral filesystem) | All data lost on every function invocation | Migrate to Supabase Postgres |
+| `better-sqlite3` native addon | Won't compile on Vercel | Remove from prod deps |
+| `gh codespace ssh` for lab scoring | No CLI available on serverless | Push-based: Codespace POSTs validate.js results |
+| Cookie `secure: false` | Won't work on HTTPS | Set `secure: true` in production |
+| Fire-and-forget evaluation | Vercel may kill function early | Make synchronous or use 60s timeout |
+
+### Architecture Decisions
+
+**Database:** Supabase Postgres (user choice over Vercel Postgres/Neon and Turso)
+- Requires async migration of all 8+12+5 service functions
+- `better-sqlite3` kept as devDep for unit tests only
+
+**Lab Scoring:** Push-based from Codespace (user choice)
+- Template repo runs `node tests/validate.js --json` and POSTs results
+- Server-side evaluation reads from validation_events table
+- Eliminates SSH dependency entirely
+
+**Concurrency:** 4 concurrent demo users supported
+- `CODESPACE_NAME` (built-in GitHub env) as the identity key
+- `SUBMIT_ENDPOINT` as a repo-level Codespace secret
+
+### Risk Register
+6 risks identified with mitigations:
+1. Sync-to-async ripple effect (HIGH) — convert one service at a time, verify between each
+2. Supabase API mismatch (MEDIUM) — use `.maybeSingle()`, always check `{data, error}`
+3. Webhook delivery from Codespace (MEDIUM) — accept event loss for non-critical data
+4. Filesystem read for questions.json (LOW) — works on Node.js runtime, test on preview
+5. Function timeout for evaluation (MEDIUM) — make synchronous + set 60s timeout
+6. Connection pooling (LOW) — Supabase uses HTTP REST, no pooling needed
+
+### Implementation Plan
+7 phases: Supabase setup → auth migration → services migration → push-based scoring → Vercel config → test adaptation → deploy

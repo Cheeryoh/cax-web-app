@@ -3,19 +3,19 @@ import { getSession, getCandidateById, getAllCandidates } from "@/lib/auth-servi
 import { getAttemptsByCandidate, getAttemptSummary, upsertAdminReview, completeReview } from "@/lib/exam-service";
 import { z } from "zod";
 
-function getAuthenticatedAdmin(request: NextRequest) {
+async function getAuthenticatedAdmin(request: NextRequest) {
   const token = request.cookies.get("session")?.value;
   if (!token) return null;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return null;
-  const candidate = getCandidateById(session.candidateId);
+  const candidate = await getCandidateById(session.candidateId);
   if (!candidate || candidate.role !== "admin") return null;
   return candidate;
 }
 
 // GET /api/admin — get all candidates and their results
 export async function GET(request: NextRequest) {
-  const admin = getAuthenticatedAdmin(request);
+  const admin = await getAuthenticatedAdmin(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -25,33 +25,35 @@ export async function GET(request: NextRequest) {
 
   if (candidateId) {
     // Drill-down: specific candidate's attempts
-    const candidate = getCandidateById(Number(candidateId));
+    const candidate = await getCandidateById(Number(candidateId));
     if (!candidate) {
       return NextResponse.json({ error: "Candidate not found" }, { status: 404 });
     }
-    const attempts = getAttemptsByCandidate(candidate.id);
-    const summaries = attempts.map((a) => getAttemptSummary(a.id));
+    const attempts = await getAttemptsByCandidate(candidate.id);
+    const summaries = await Promise.all(attempts.map((a) => getAttemptSummary(a.id)));
     return NextResponse.json({ candidate, attempts: summaries });
   }
 
   // List all candidates with their latest attempt summary
-  const candidates = getAllCandidates();
-  const results = candidates.map((c) => {
-    const attempts = getAttemptsByCandidate(c.id);
-    const latestAttempt = attempts[0];
-    const summary = latestAttempt ? getAttemptSummary(latestAttempt.id) : null;
-    return {
-      candidate: c,
-      totalAttempts: attempts.length,
-      latestAttempt: summary,
-    };
-  });
+  const candidates = await getAllCandidates();
+  const results = await Promise.all(
+    candidates.map(async (c) => {
+      const attempts = await getAttemptsByCandidate(c.id);
+      const latestAttempt = attempts[0];
+      const summary = latestAttempt ? await getAttemptSummary(latestAttempt.id) : null;
+      return {
+        candidate: c,
+        totalAttempts: attempts.length,
+        latestAttempt: summary,
+      };
+    })
+  );
 
   return NextResponse.json({ candidates: results });
 }
 
 export async function POST(request: NextRequest) {
-  const admin = getAuthenticatedAdmin(request);
+  const admin = await getAuthenticatedAdmin(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Validation failed", details: parsed.error.issues }, { status: 400 });
     }
     const d = parsed.data;
-    const review = upsertAdminReview(d.attemptId, admin.id, d.dimension, d.originalScore, d.adjustedScore, d.weight, d.comment ?? null);
+    const review = await upsertAdminReview(d.attemptId, admin.id, d.dimension, d.originalScore, d.adjustedScore, d.weight, d.comment ?? null);
     return NextResponse.json({ review });
   }
 
@@ -92,7 +94,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Validation failed", details: parsed.error.issues }, { status: 400 });
     }
-    completeReview(parsed.data.attemptId, parsed.data.finalResult);
+    await completeReview(parsed.data.attemptId, parsed.data.finalResult);
     return NextResponse.json({ success: true });
   }
 

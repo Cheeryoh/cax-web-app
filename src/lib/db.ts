@@ -1,3 +1,5 @@
+// DEPRECATED for production — only used by unit tests (devDependency: better-sqlite3)
+// Production uses Supabase Postgres via ./supabase.ts
 import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";

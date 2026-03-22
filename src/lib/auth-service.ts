@@ -1,4 +1,4 @@
-import { getDb } from "./db";
+import { getSupabase } from "./supabase";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -19,86 +19,127 @@ export async function createCandidate(
   displayName: string,
   role: "candidate" | "admin" = "candidate"
 ): Promise<Candidate> {
-  const db = getDb();
+  const supabase = getSupabase();
   const hash = await bcrypt.hash(password, SALT_ROUNDS);
-  db.prepare(
-    "INSERT OR IGNORE INTO candidates (username, password_hash, display_name, role) VALUES (?, ?, ?, ?)"
-  ).run(username, hash, displayName, role);
-  return db
-    .prepare("SELECT id, username, display_name, role, created_at, active FROM candidates WHERE username = ?")
-    .get(username) as Candidate;
+
+  const { data, error } = await supabase
+    .from("candidates")
+    .upsert(
+      { username, password_hash: hash, display_name: displayName, role },
+      { onConflict: "username", ignoreDuplicates: true }
+    )
+    .select("id, username, display_name, role, created_at, active")
+    .single();
+
+  if (error) throw new Error(`createCandidate failed: ${error.message}`);
+  return data as Candidate;
 }
 
 export async function validateCredentials(
   username: string,
   password: string
 ): Promise<Candidate | null> {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT * FROM candidates WHERE username = ? AND active = 1")
-    .get(username) as (Candidate & { password_hash: string }) | undefined;
+  const supabase = getSupabase();
+
+  const { data: row, error } = await supabase
+    .from("candidates")
+    .select("*")
+    .eq("username", username)
+    .eq("active", 1)
+    .maybeSingle();
+
+  if (error) throw new Error(`validateCredentials failed: ${error.message}`);
   if (!row) return null;
-  const valid = await bcrypt.compare(password, row.password_hash);
+
+  const valid = await bcrypt.compare(password, row.password_hash as string);
   if (!valid) return null;
-  const { password_hash: _hash, ...candidate } = row;
-  return candidate;
+
+  const { password_hash: _hash, ...candidate } = row as Record<string, unknown>;
+  return candidate as unknown as Candidate;
 }
 
-export function getCandidateById(id: number): Candidate | null {
-  const db = getDb();
-  return (
-    db
-      .prepare("SELECT id, username, display_name, role, created_at, active FROM candidates WHERE id = ?")
-      .get(id) as Candidate | undefined
-  ) ?? null;
+export async function getCandidateById(id: number): Promise<Candidate | null> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("candidates")
+    .select("id, username, display_name, role, created_at, active")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(`getCandidateById failed: ${error.message}`);
+  return (data as Candidate | null) ?? null;
 }
 
-export function getAllCandidates(): Candidate[] {
-  const db = getDb();
-  return db
-    .prepare("SELECT id, username, display_name, role, created_at, active FROM candidates WHERE role = 'candidate' ORDER BY created_at DESC")
-    .all() as Candidate[];
+export async function getAllCandidates(): Promise<Candidate[]> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("candidates")
+    .select("id, username, display_name, role, created_at, active")
+    .eq("role", "candidate")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(`getAllCandidates failed: ${error.message}`);
+  return (data ?? []) as Candidate[];
 }
 
 export function generateSessionToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
-// SQLite-backed session store (shared across all route workers)
-export function createSession(candidateId: number): string {
-  const db = getDb();
+// Supabase-backed session store
+export async function createSession(candidateId: number): Promise<string> {
+  const supabase = getSupabase();
   const token = generateSessionToken();
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-  db.prepare(
-    "INSERT INTO sessions (token, candidate_id, expires_at) VALUES (?, ?, ?)"
-  ).run(token, candidateId, expiresAt);
+
+  const { error } = await supabase
+    .from("sessions")
+    .insert({ token, candidate_id: candidateId, expires_at: expiresAt });
+
+  if (error) throw new Error(`createSession failed: ${error.message}`);
   return token;
 }
 
-export function getSession(token: string): { candidateId: number } | null {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT candidate_id, expires_at FROM sessions WHERE token = ?")
-    .get(token) as { candidate_id: number; expires_at: string } | undefined;
+export async function getSession(
+  token: string
+): Promise<{ candidateId: number } | null> {
+  const supabase = getSupabase();
+
+  const { data: row, error } = await supabase
+    .from("sessions")
+    .select("candidate_id, expires_at")
+    .eq("token", token)
+    .maybeSingle();
+
+  if (error) throw new Error(`getSession failed: ${error.message}`);
   if (!row) return null;
-  if (new Date(row.expires_at) < new Date()) {
-    db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
+
+  if (new Date(row.expires_at as string) < new Date()) {
+    await supabase.from("sessions").delete().eq("token", token);
     return null;
   }
-  return { candidateId: row.candidate_id };
+
+  return { candidateId: row.candidate_id as number };
 }
 
-export function destroySession(token: string): void {
-  const db = getDb();
-  db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
+export async function destroySession(token: string): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.from("sessions").delete().eq("token", token);
+  if (error) throw new Error(`destroySession failed: ${error.message}`);
 }
 
 // Seed demo data
 export async function seedDemoData(): Promise<void> {
-  const db = getDb();
-  const existing = db
-    .prepare("SELECT id FROM candidates WHERE username = ?")
-    .get("demo@example.com");
+  const supabase = getSupabase();
+
+  const { data: existing } = await supabase
+    .from("candidates")
+    .select("id")
+    .eq("username", "demo@example.com")
+    .maybeSingle();
+
   if (existing) return;
 
   await createCandidate("demo@example.com", "Cand!date2026", "Demo Candidate", "candidate");

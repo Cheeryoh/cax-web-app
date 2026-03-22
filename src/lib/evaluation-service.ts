@@ -1,8 +1,6 @@
-import { execSync } from "child_process";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { getDb } from "./db";
-import { getEnvironmentByAttempt } from "./environment-service";
+import { getSupabase } from "./supabase";
 import { updateAttemptStatus } from "./exam-service";
 
 // ---------------------------------------------------------------------------
@@ -24,75 +22,76 @@ function checkToTaskId(checkName: string): string | null {
 }
 
 export async function evaluateLabResults(attemptId: number): Promise<void> {
-  const db = getDb();
+  const supabase = getSupabase();
 
   // Idempotent: clear previous results before writing new ones
-  db.prepare("DELETE FROM lab_results WHERE attempt_id = ?").run(attemptId);
+  const { error: deleteError } = await supabase
+    .from("lab_results")
+    .delete()
+    .eq("attempt_id", attemptId);
+  if (deleteError) throw new Error(`evaluateLabResults delete failed: ${deleteError.message}`);
 
   if (process.env.USE_MOCK === "true") {
     const mockTasks = [
       {
-        taskId: "task1_jquery",
+        task_id: "task1_jquery",
         passed: 1,
-        details: { checks: ["jquery_version", "vendor_updated"], allPassed: true },
+        details_json: JSON.stringify({ checks: ["jquery_version", "vendor_updated"], allPassed: true }),
       },
       {
-        taskId: "task2_analytics",
+        task_id: "task2_analytics",
         passed: 1,
-        details: { checks: ["no_ua_tag"], allPassed: true },
+        details_json: JSON.stringify({ checks: ["no_ua_tag"], allPassed: true }),
       },
       {
-        taskId: "task3_branding",
+        task_id: "task3_branding",
         passed: 1,
-        details: {
+        details_json: JSON.stringify({
           checks: ["global_scss", "overrides_scss", "img_profile", "skill_badge"],
           allPassed: true,
-        },
+        }),
       },
     ];
-    const insert = db.prepare(
-      "INSERT INTO lab_results (attempt_id, task_id, passed, details_json) VALUES (?, ?, ?, ?)"
-    );
-    for (const task of mockTasks) {
-      insert.run(attemptId, task.taskId, task.passed, JSON.stringify(task.details));
-    }
+
+    const rows = mockTasks.map((t) => ({ attempt_id: attemptId, ...t }));
+    const { error: insertError } = await supabase.from("lab_results").insert(rows);
+    if (insertError) throw new Error(`evaluateLabResults mock insert failed: ${insertError.message}`);
     return;
   }
 
-  // Real mode: SSH into the Codespace and run the validator
-  const env = getEnvironmentByAttempt(attemptId);
-  if (!env || !env.codespace_name) {
+  // Real mode: read lab_results event from validation_events
+  const { data: events, error: eventsError } = await supabase
+    .from("validation_events")
+    .select("*")
+    .eq("attempt_id", attemptId)
+    .eq("event_type", "lab_results")
+    .order("timestamp", { ascending: false })
+    .limit(1);
+
+  if (eventsError) throw new Error(`evaluateLabResults events fetch failed: ${eventsError.message}`);
+
+  if (!events || events.length === 0) {
     console.warn(
-      `evaluateLabResults: no active codespace for attempt ${attemptId}, skipping lab check`
+      `evaluateLabResults: no lab_results event for attempt ${attemptId}, skipping lab check`
     );
     return;
   }
 
-  const codespaceName = env.codespace_name;
-
+  // Parse the most recent lab_results event
+  const latestEvent = events[0] as Record<string, unknown>;
   let stdout: string;
   try {
-    stdout = execSync(
-      `gh codespace ssh -c ${codespaceName} -- "cd /workspaces/exam-template-alex-rivera && node tests/validate.js"`,
-      {
-        encoding: "utf-8",
-        env: {
-          ...process.env,
-          GH_TOKEN: process.env.GITHUB_PAT ?? "",
-        },
-        timeout: 60_000,
-      }
-    );
-  } catch (err) {
+    const rawJson = latestEvent.raw_json as string;
+    const parsed = JSON.parse(rawJson) as Record<string, unknown>;
+    stdout = typeof parsed.output === "string" ? parsed.output : rawJson;
+  } catch {
     console.warn(
-      `evaluateLabResults: gh codespace ssh failed for attempt ${attemptId}:`,
-      err instanceof Error ? err.message : String(err)
+      `evaluateLabResults: failed to parse lab_results event for attempt ${attemptId}`
     );
     return;
   }
 
   // Parse stdout: lines starting with ✓ (pass) or ✗ (fail)
-  // Collect per-task results
   const taskChecks: Record<string, { passed: string[]; failed: string[] }> = {};
   for (const taskId of Object.keys(TASK_CHECK_MAP)) {
     taskChecks[taskId] = { passed: [], failed: [] };
@@ -124,14 +123,18 @@ export async function evaluateLabResults(attemptId: number): Promise<void> {
   }
 
   // Insert results — a task passes only when all its checks pass
-  const insert = db.prepare(
-    "INSERT INTO lab_results (attempt_id, task_id, passed, details_json) VALUES (?, ?, ?, ?)"
-  );
-  for (const [taskId, { passed, failed }] of Object.entries(taskChecks)) {
+  const insertRows = Object.entries(taskChecks).map(([taskId, { passed, failed }]) => {
     const allPassed = failed.length === 0 && passed.length > 0;
-    const details = { passed, failed, allPassed };
-    insert.run(attemptId, taskId, allPassed ? 1 : 0, JSON.stringify(details));
-  }
+    return {
+      attempt_id: attemptId,
+      task_id: taskId,
+      passed: allPassed ? 1 : 0,
+      details_json: JSON.stringify({ passed, failed, allPassed }),
+    };
+  });
+
+  const { error: insertError } = await supabase.from("lab_results").insert(insertRows);
+  if (insertError) throw new Error(`evaluateLabResults insert failed: ${insertError.message}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -222,10 +225,14 @@ Respond with ONLY valid JSON in this exact format (no markdown, no preamble):
 }
 
 export async function evaluateFluency(attemptId: number): Promise<void> {
-  const db = getDb();
+  const supabase = getSupabase();
 
   // Idempotent: clear previous score before writing new one
-  db.prepare("DELETE FROM fluency_scores WHERE attempt_id = ?").run(attemptId);
+  const { error: deleteError } = await supabase
+    .from("fluency_scores")
+    .delete()
+    .eq("attempt_id", attemptId);
+  if (deleteError) throw new Error(`evaluateFluency delete failed: ${deleteError.message}`);
 
   if (process.env.USE_MOCK === "true") {
     const mockResult: FluencyResponse = {
@@ -250,23 +257,29 @@ export async function evaluateFluency(attemptId: number): Promise<void> {
           "Consistently verified changes by running the test suite and checking results.",
       },
     };
-    db.prepare(
-      "INSERT INTO fluency_scores (attempt_id, delegation, description, discernment, diligence, raw_analysis) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run(
-      attemptId,
-      mockResult.delegation.score,
-      mockResult.description.score,
-      mockResult.discernment.score,
-      mockResult.diligence.score,
-      JSON.stringify(mockResult)
-    );
+
+    const { error: insertError } = await supabase.from("fluency_scores").insert({
+      attempt_id: attemptId,
+      delegation: mockResult.delegation.score,
+      description: mockResult.description.score,
+      discernment: mockResult.discernment.score,
+      diligence: mockResult.diligence.score,
+      raw_analysis: JSON.stringify(mockResult),
+    });
+    if (insertError) throw new Error(`evaluateFluency mock insert failed: ${insertError.message}`);
     return;
   }
 
   // Real mode: build transcript from validation_events, call Anthropic API
-  const events = db
-    .prepare("SELECT * FROM validation_events WHERE attempt_id = ? ORDER BY timestamp")
-    .all(attemptId) as ValidationEvent[];
+  const { data: eventsData, error: eventsError } = await supabase
+    .from("validation_events")
+    .select("*")
+    .eq("attempt_id", attemptId)
+    .order("timestamp", { ascending: true });
+
+  if (eventsError) throw new Error(`evaluateFluency events fetch failed: ${eventsError.message}`);
+
+  const events = (eventsData ?? []) as ValidationEvent[];
 
   if (events.length === 0) {
     console.warn(
@@ -313,16 +326,15 @@ export async function evaluateFluency(attemptId: number): Promise<void> {
   }
 
   const result = validated.data;
-  db.prepare(
-    "INSERT INTO fluency_scores (attempt_id, delegation, description, discernment, diligence, raw_analysis) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(
-    attemptId,
-    result.delegation.score,
-    result.description.score,
-    result.discernment.score,
-    result.diligence.score,
-    JSON.stringify(result)
-  );
+  const { error: insertError } = await supabase.from("fluency_scores").insert({
+    attempt_id: attemptId,
+    delegation: result.delegation.score,
+    description: result.description.score,
+    discernment: result.discernment.score,
+    diligence: result.diligence.score,
+    raw_analysis: JSON.stringify(result),
+  });
+  if (insertError) throw new Error(`evaluateFluency insert failed: ${insertError.message}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -348,5 +360,5 @@ export async function runFullEvaluation(attemptId: number): Promise<void> {
     );
   }
 
-  updateAttemptStatus(attemptId, "evaluated");
+  await updateAttemptStatus(attemptId, "evaluated");
 }

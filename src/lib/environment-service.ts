@@ -1,4 +1,4 @@
-import { getDb } from "./db";
+import { getSupabase } from "./supabase";
 
 export interface Environment {
   id: number;
@@ -28,26 +28,31 @@ function rowToEnvironment(row: Record<string, unknown>): Environment {
 }
 
 export async function createEnvironment(attemptId: number): Promise<Environment> {
-  const db = getDb();
+  const supabase = getSupabase();
 
   // Insert initial row with status 'creating'
-  const insert = db.prepare(
-    `INSERT INTO environments (attempt_id, status) VALUES (?, 'creating')`
-  );
-  const result = insert.run(attemptId);
-  const envId = result.lastInsertRowid as number;
+  const { data: insertedRow, error: insertError } = await supabase
+    .from("environments")
+    .insert({ attempt_id: attemptId, status: "creating" })
+    .select()
+    .single();
+
+  if (insertError) throw new Error(`createEnvironment insert failed: ${insertError.message}`);
+  const envId = (insertedRow as Record<string, unknown>).id as number;
 
   if (process.env.USE_MOCK === "true") {
     const mockName = `mock-cs-${attemptId}`;
     const mockUrl = "https://mock-codespace.github.dev";
-    db.prepare(
-      `UPDATE environments SET codespace_name = ?, codespace_url = ?, status = 'ready' WHERE id = ?`
-    ).run(mockName, mockUrl, envId);
 
-    const row = db
-      .prepare("SELECT * FROM environments WHERE id = ?")
-      .get(envId) as Record<string, unknown>;
-    return rowToEnvironment(row);
+    const { data: updatedRow, error: updateError } = await supabase
+      .from("environments")
+      .update({ codespace_name: mockName, codespace_url: mockUrl, status: "ready" })
+      .eq("id", envId)
+      .select()
+      .single();
+
+    if (updateError) throw new Error(`createEnvironment mock update failed: ${updateError.message}`);
+    return rowToEnvironment(updatedRow as Record<string, unknown>);
   }
 
   // Real mode: call GitHub API to create the codespace
@@ -75,53 +80,77 @@ export async function createEnvironment(attemptId: number): Promise<Environment>
     const codespaceId = String(data.id);
     const codespace_name = data.name;
 
-    db.prepare(
-      `UPDATE environments SET codespace_id = ?, codespace_name = ?, status = 'creating' WHERE id = ?`
-    ).run(codespaceId, codespace_name, envId);
+    await supabase
+      .from("environments")
+      .update({ codespace_id: codespaceId, codespace_name, status: "creating" })
+      .eq("id", envId);
   } catch (err) {
-    db.prepare(`UPDATE environments SET status = 'failed' WHERE id = ?`).run(envId);
-    const row = db
-      .prepare("SELECT * FROM environments WHERE id = ?")
-      .get(envId) as Record<string, unknown>;
-    // Re-throw after recording failure so caller knows something went wrong
+    await supabase
+      .from("environments")
+      .update({ status: "failed" })
+      .eq("id", envId);
     throw new Error(
       `Failed to create GitHub Codespace: ${err instanceof Error ? err.message : String(err)}`
     );
   }
 
-  const row = db
-    .prepare("SELECT * FROM environments WHERE id = ?")
-    .get(envId) as Record<string, unknown>;
-  return rowToEnvironment(row);
+  const { data: finalRow, error: finalError } = await supabase
+    .from("environments")
+    .select("*")
+    .eq("id", envId)
+    .single();
+
+  if (finalError) throw new Error(`createEnvironment fetch final failed: ${finalError.message}`);
+  return rowToEnvironment(finalRow as Record<string, unknown>);
 }
 
-export function getEnvironmentByAttempt(attemptId: number): Environment | null {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT * FROM environments WHERE attempt_id = ? ORDER BY id DESC LIMIT 1")
-    .get(attemptId) as Record<string, unknown> | undefined;
-  return row ? rowToEnvironment(row) : null;
+export async function getEnvironmentByAttempt(
+  attemptId: number
+): Promise<Environment | null> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("environments")
+    .select("*")
+    .eq("attempt_id", attemptId)
+    .order("id", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw new Error(`getEnvironmentByAttempt failed: ${error.message}`);
+  return data ? rowToEnvironment(data as Record<string, unknown>) : null;
 }
 
-export function getEnvironmentByCodespaceName(name: string): Environment | null {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT * FROM environments WHERE codespace_name = ?")
-    .get(name) as Record<string, unknown> | undefined;
-  return row ? rowToEnvironment(row) : null;
+export async function getEnvironmentByCodespaceName(
+  name: string
+): Promise<Environment | null> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("environments")
+    .select("*")
+    .eq("codespace_name", name)
+    .maybeSingle();
+
+  if (error) throw new Error(`getEnvironmentByCodespaceName failed: ${error.message}`);
+  return data ? rowToEnvironment(data as Record<string, unknown>) : null;
 }
 
 export async function pollEnvironmentStatus(envId: number): Promise<Environment> {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT * FROM environments WHERE id = ?")
-    .get(envId) as Record<string, unknown> | undefined;
+  const supabase = getSupabase();
 
+  const { data: row, error: fetchError } = await supabase
+    .from("environments")
+    .select("*")
+    .eq("id", envId)
+    .maybeSingle();
+
+  if (fetchError) throw new Error(`pollEnvironmentStatus fetch failed: ${fetchError.message}`);
   if (!row) {
     throw new Error(`Environment ${envId} not found`);
   }
 
-  const env = rowToEnvironment(row);
+  const env = rowToEnvironment(row as Record<string, unknown>);
 
   // In mock mode or if status is terminal/already-ready, return as-is
   if (
@@ -181,46 +210,62 @@ export async function pollEnvironmentStatus(envId: number): Promise<Environment>
         newStatus = env.status;
     }
 
-    db.prepare(
-      `UPDATE environments SET status = ?, codespace_url = ? WHERE id = ?`
-    ).run(newStatus, newUrl, envId);
+    await supabase
+      .from("environments")
+      .update({ status: newStatus, codespace_url: newUrl })
+      .eq("id", envId);
   } catch (err) {
-    db.prepare(`UPDATE environments SET status = 'failed' WHERE id = ?`).run(envId);
+    await supabase
+      .from("environments")
+      .update({ status: "failed" })
+      .eq("id", envId);
     throw new Error(
       `Failed to poll GitHub Codespace status: ${err instanceof Error ? err.message : String(err)}`
     );
   }
 
-  const updated = db
-    .prepare("SELECT * FROM environments WHERE id = ?")
-    .get(envId) as Record<string, unknown>;
-  return rowToEnvironment(updated);
+  const { data: updated, error: updatedError } = await supabase
+    .from("environments")
+    .select("*")
+    .eq("id", envId)
+    .single();
+
+  if (updatedError) throw new Error(`pollEnvironmentStatus re-fetch failed: ${updatedError.message}`);
+  return rowToEnvironment(updated as Record<string, unknown>);
 }
 
 export async function destroyEnvironment(envId: number): Promise<void> {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT * FROM environments WHERE id = ?")
-    .get(envId) as Record<string, unknown> | undefined;
+  const supabase = getSupabase();
 
+  const { data: row, error: fetchError } = await supabase
+    .from("environments")
+    .select("*")
+    .eq("id", envId)
+    .maybeSingle();
+
+  if (fetchError) throw new Error(`destroyEnvironment fetch failed: ${fetchError.message}`);
   if (!row) {
     throw new Error(`Environment ${envId} not found`);
   }
 
-  const env = rowToEnvironment(row);
+  const env = rowToEnvironment(row as Record<string, unknown>);
   const destroyedAt = new Date().toISOString();
 
   if (process.env.USE_MOCK === "true") {
-    db.prepare(
-      `UPDATE environments SET status = 'deleted', destroyed_at = ? WHERE id = ?`
-    ).run(destroyedAt, envId);
+    const { error } = await supabase
+      .from("environments")
+      .update({ status: "deleted", destroyed_at: destroyedAt })
+      .eq("id", envId);
+    if (error) throw new Error(`destroyEnvironment mock update failed: ${error.message}`);
     return;
   }
 
   if (!env.codespace_name) {
-    db.prepare(
-      `UPDATE environments SET status = 'deleted', destroyed_at = ? WHERE id = ?`
-    ).run(destroyedAt, envId);
+    const { error } = await supabase
+      .from("environments")
+      .update({ status: "deleted", destroyed_at: destroyedAt })
+      .eq("id", envId);
+    if (error) throw new Error(`destroyEnvironment update failed: ${error.message}`);
     return;
   }
 
@@ -249,7 +294,9 @@ export async function destroyEnvironment(envId: number): Promise<void> {
     );
   }
 
-  db.prepare(
-    `UPDATE environments SET status = 'deleted', destroyed_at = ? WHERE id = ?`
-  ).run(destroyedAt, envId);
+  const { error } = await supabase
+    .from("environments")
+    .update({ status: "deleted", destroyed_at: destroyedAt })
+    .eq("id", envId);
+  if (error) throw new Error(`destroyEnvironment final update failed: ${error.message}`);
 }

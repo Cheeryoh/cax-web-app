@@ -4,12 +4,12 @@ import { getAttempt } from "@/lib/exam-service";
 import { runFullEvaluation } from "@/lib/evaluation-service";
 import { z } from "zod";
 
-function getAuthenticatedAdmin(request: NextRequest) {
+async function getAuthenticatedAdmin(request: NextRequest) {
   const token = request.cookies.get("session")?.value;
   if (!token) return null;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return null;
-  const candidate = getCandidateById(session.candidateId);
+  const candidate = await getCandidateById(session.candidateId);
   if (!candidate || candidate.role !== "admin") return null;
   return candidate;
 }
@@ -20,7 +20,7 @@ const EvaluateSchema = z.object({
 
 // POST /api/evaluate — trigger evaluation for a submitted attempt
 export async function POST(request: NextRequest) {
-  const admin = getAuthenticatedAdmin(request);
+  const admin = await getAuthenticatedAdmin(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
   const { attemptId } = parsed.data;
 
-  const attempt = getAttempt(attemptId);
+  const attempt = await getAttempt(attemptId);
   if (!attempt) {
     return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
   }

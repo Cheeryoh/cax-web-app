@@ -12,22 +12,22 @@ import {
   getAttempt,
 } from "./exam-service";
 import { seedDemoData } from "./auth-service";
-import { getDb, closeDb } from "./db";
+import { closeDb } from "./db";
 
 // Preserve original env value so afterAll can restore it
 const ORIGINAL_USE_MOCK = process.env.USE_MOCK;
 
 let attemptId: number;
 
+// These tests require SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY environment variables.
 beforeAll(async () => {
   process.env.USE_MOCK = "true";
-  getDb(); // Initialize DB + schema
   await seedDemoData(); // Ensure candidate ID 1 exists
 
   // Create a fresh attempt for the evaluation tests and move it to 'submitted'
-  const attempt = createAttempt(1);
+  const attempt = await createAttempt(1);
   attemptId = attempt.id;
-  updateAttemptStatus(attemptId, "submitted");
+  await updateAttemptStatus(attemptId, "submitted");
 });
 
 afterAll(() => {
@@ -43,20 +43,20 @@ describe("evaluateLabResults (mock mode)", () => {
   it("inserts 3 lab_results rows for the attempt", async () => {
     await evaluateLabResults(attemptId);
 
-    const results = getLabResults(attemptId);
+    const results = await getLabResults(attemptId);
     expect(results).toHaveLength(3);
   });
 
   it("each row has passed === 1", async () => {
     // evaluateLabResults is idempotent — calling again gives same results
-    const results = getLabResults(attemptId);
+    const results = await getLabResults(attemptId);
     for (const row of results) {
       expect(row.passed).toBe(1);
     }
   });
 
   it("task IDs include task1_jquery, task2_analytics, task3_branding", async () => {
-    const results = getLabResults(attemptId);
+    const results = await getLabResults(attemptId);
     const taskIds = results.map((r) => r.task_id);
     expect(taskIds).toContain("task1_jquery");
     expect(taskIds).toContain("task2_analytics");
@@ -72,12 +72,12 @@ describe("evaluateFluency (mock mode)", () => {
   it("inserts a fluency_scores row for the attempt", async () => {
     await evaluateFluency(attemptId);
 
-    const score = getFluencyScore(attemptId);
+    const score = await getFluencyScore(attemptId);
     expect(score).not.toBeNull();
   });
 
   it("all four dimensions have scores between 1 and 5", async () => {
-    const score = getFluencyScore(attemptId);
+    const score = await getFluencyScore(attemptId);
     expect(score).not.toBeNull();
 
     const { delegation, description, discernment, diligence } = score!;
@@ -89,7 +89,7 @@ describe("evaluateFluency (mock mode)", () => {
   });
 
   it("raw_analysis is valid JSON", async () => {
-    const score = getFluencyScore(attemptId);
+    const score = await getFluencyScore(attemptId);
     expect(score).not.toBeNull();
     expect(score!.raw_analysis).not.toBeNull();
 
@@ -111,26 +111,26 @@ describe("runFullEvaluation (mock mode)", () => {
   let fullAttemptId: number;
 
   beforeAll(async () => {
-    const attempt = createAttempt(1);
+    const attempt = await createAttempt(1);
     fullAttemptId = attempt.id;
-    updateAttemptStatus(fullAttemptId, "submitted");
+    await updateAttemptStatus(fullAttemptId, "submitted");
   });
 
   it("sets attempt status to 'evaluated'", async () => {
     await runFullEvaluation(fullAttemptId);
 
-    const attempt = getAttempt(fullAttemptId);
+    const attempt = await getAttempt(fullAttemptId);
     expect(attempt).not.toBeNull();
     expect(attempt!.status).toBe("evaluated");
   });
 
   it("produces 3 lab_results rows", async () => {
-    const results = getLabResults(fullAttemptId);
+    const results = await getLabResults(fullAttemptId);
     expect(results).toHaveLength(3);
   });
 
   it("produces 1 fluency_scores row", async () => {
-    const score = getFluencyScore(fullAttemptId);
+    const score = await getFluencyScore(fullAttemptId);
     expect(score).not.toBeNull();
   });
 
@@ -138,10 +138,10 @@ describe("runFullEvaluation (mock mode)", () => {
     // Second call
     await runFullEvaluation(fullAttemptId);
 
-    const results = getLabResults(fullAttemptId);
+    const results = await getLabResults(fullAttemptId);
     expect(results).toHaveLength(3);
 
-    const score = getFluencyScore(fullAttemptId);
+    const score = await getFluencyScore(fullAttemptId);
     expect(score).not.toBeNull();
   });
 });
