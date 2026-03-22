@@ -347,6 +347,35 @@ for (let j = 0; j < entries.length; j++) {
   deduped.push({ ...entry });
 }
 
+// Deduplicate paragraphs within each entry
+for (const entry of deduped) {
+  const paragraphs = entry.content.split("\n\n").map((p) => p.trim()).filter(Boolean);
+  const seen = new Set();
+  const uniqueParagraphs = [];
+  for (const p of paragraphs) {
+    // Normalize whitespace for comparison
+    const normalized = p.replace(/\s+/g, " ");
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    uniqueParagraphs.push(p);
+  }
+  entry.content = uniqueParagraphs.join("\n\n") + "\n";
+}
+
+// Also deduplicate consecutive lines within entries (for line-level dupes)
+for (const entry of deduped) {
+  const entryLines = entry.content.split("\n");
+  const dedupedLines = [];
+  for (let k = 0; k < entryLines.length; k++) {
+    const line = entryLines[k];
+    const prevLine = dedupedLines[dedupedLines.length - 1];
+    // Skip if exact same as previous non-empty line
+    if (line.trim() && prevLine && line.trim() === prevLine.trim()) continue;
+    dedupedLines.push(line);
+  }
+  entry.content = dedupedLines.join("\n");
+}
+
 // Rebuild output
 const finalLines = [];
 finalLines.push((entries._preamble || "").trimEnd());
