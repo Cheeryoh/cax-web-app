@@ -297,11 +297,20 @@ export default function AdminDashboard() {
       .sort((a, b) => a.round - b.round);
   }
 
-  function convergenceProgress(): { resolved: number; total: number } {
+  function convergenceProgress(): { resolved: number; total: number; tasksComplete: number; tasksTotal: number } {
     const resolved = taskEvals.filter(
       (e) => e.status === "confirmed" || e.status === "resolved"
     ).length;
-    return { resolved, total: taskEvals.length || 12 };
+    const total = taskEvals.length || 12;
+    // Count tasks where all 4 dimensions are resolved
+    let tasksComplete = 0;
+    for (const taskId of TASK_IDS) {
+      const taskDims = taskEvals.filter((e) => e.task_id === taskId);
+      if (taskDims.length === 4 && taskDims.every((e) => e.status === "confirmed" || e.status === "resolved")) {
+        tasksComplete++;
+      }
+    }
+    return { resolved, total, tasksComplete, tasksTotal: 3 };
   }
 
   function truncateJson(jsonStr: string | null, maxLen: number = 120): string {
@@ -423,7 +432,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           {isExpanded && progress
-                            ? `${progress.resolved}/${progress.total}`
+                            ? `${progress.tasksComplete}/${progress.tasksTotal} tasks`
                             : "—"}
                         </TableCell>
                         <TableCell>
@@ -472,9 +481,9 @@ export default function AdminDashboard() {
                                       ).length
                                     }
                                     /{latest.labResults.length} |{" "}
-                                    {convergenceProgress().resolved}/
-                                    {convergenceProgress().total} dimensions
-                                    resolved
+                                    {convergenceProgress().tasksComplete}/
+                                    {convergenceProgress().tasksTotal} tasks
+                                    reviewed
                                   </p>
                                 </div>
                                 <div className="flex gap-2">
@@ -769,7 +778,7 @@ export default function AdminDashboard() {
                                               </div>
 
                                               {/* LLM Justification */}
-                                              <p className="text-xs text-muted-foreground leading-relaxed break-words overflow-hidden">
+                                              <p className="text-xs text-muted-foreground leading-relaxed break-words">
                                                 {evalItem.llm_justification ??
                                                   "No justification available"}
                                               </p>
@@ -787,7 +796,7 @@ export default function AdminDashboard() {
                                                       .map((d) => (
                                                         <div
                                                           key={d.id}
-                                                          className={`text-xs p-2 rounded ${d.actor === "admin" ? "bg-blue-50 border-l-2 border-blue-400" : "bg-gray-50 border-l-2 border-gray-400"}`}
+                                                          className={`text-xs p-2 rounded overflow-hidden ${d.actor === "admin" ? "bg-blue-50 border-l-2 border-blue-400" : "bg-gray-50 border-l-2 border-gray-400"}`}
                                                         >
                                                           <span className="font-semibold capitalize">
                                                             {d.actor}
@@ -801,7 +810,7 @@ export default function AdminDashboard() {
                                                             )}
                                                             )
                                                           </span>
-                                                          <p className="mt-0.5 break-words">
+                                                          <p className="mt-0.5 break-words whitespace-pre-wrap">
                                                             {d.reasoning}
                                                           </p>
                                                         </div>
