@@ -21,6 +21,8 @@ export default function ExamPage() {
   const [attemptId, setAttemptId] = useState<number | null>(null);
   const [mcResult, setMcResult] = useState<{ correct: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [envStatus, setEnvStatus] = useState<string | null>(null);
+  const [codespaceUrl, setCodespaceUrl] = useState<string | null>(null);
 
   async function startExam() {
     try {
@@ -52,6 +54,27 @@ export default function ExamPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if ((phase === "mc_submitted" || phase === "lab") && attemptId && envStatus !== "ready") {
+      const interval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/environments?attemptId=${attemptId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setEnvStatus(data.environment?.status ?? null);
+            if (data.environment?.codespace_url) {
+              setCodespaceUrl(data.environment.codespace_url);
+            }
+            if (data.environment?.status === "ready" || data.environment?.status === "failed") {
+              clearInterval(interval);
+            }
+          }
+        } catch { /* ignore polling errors */ }
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [phase, attemptId, envStatus]);
+
   async function submitMc() {
     if (!attemptId) return;
     const answerList = Object.entries(answers).map(([questionId, selectedAnswer]) => ({
@@ -76,6 +99,14 @@ export default function ExamPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "submit_lab", attemptId }),
     });
+    // Cleanup environment
+    if (attemptId) {
+      fetch("/api/environments", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attemptId }),
+      }).catch(() => {}); // fire and forget
+    }
     setPhase("submitted");
   }
 
@@ -198,48 +229,36 @@ export default function ExamPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Task 1: Fix CSS Layout</CardTitle>
+              <CardTitle className="text-base">Task 1: Fix jQuery Vulnerability</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                The hero section and navigation bar have layout issues. Fix the flexbox properties
-                and z-index so the page renders correctly.
+                The site uses jQuery 3.4.1 which has a known prototype pollution vulnerability (CVE-2019-11358).
+                Update jQuery to a patched version and rebuild the vendor files.
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Task 2: Fix JavaScript Error</CardTitle>
+              <CardTitle className="text-base">Task 2: Remove Dead Analytics Tag</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                The contact form throws a runtime error when submitted. Find and fix the
-                JavaScript issue so the form works.
+                The HTML contains a Google Analytics Universal Analytics (UA-) tracking tag.
+                UA was sunset on July 1, 2023 and no longer collects data. Remove the dead script block.
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Task 3: Fix Broken Assets</CardTitle>
+              <CardTitle className="text-base">Task 3: Fix Brand Color Consistency</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Images and the favicon are not loading. Fix the asset paths so all
-                media displays correctly.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Task 4: Improve Page Quality</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Improve the page quality and ensure it follows web best practices.
-                There are multiple valid approaches — use your judgment.
+                The brand color #BD5D38 is hardcoded in multiple places instead of using the SCSS $primary variable.
+                Replace all hardcoded instances with the variable and remove any inline styles that override it.
               </p>
             </CardContent>
           </Card>
@@ -250,11 +269,38 @@ export default function ExamPage() {
             <CardTitle className="text-base">Your Environment</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">
-              Your Codespace is being prepared. Use <code className="bg-muted px-1 rounded">claude-exam</code> instead
-              of <code className="bg-muted px-1 rounded">claude</code> to ensure your interactions are logged.
-            </p>
-            <Badge variant="outline">Environment: Provisioning...</Badge>
+            {envStatus === "ready" && codespaceUrl ? (
+              <div className="space-y-3">
+                <Badge variant="default">Ready</Badge>
+                <p className="text-sm text-muted-foreground">
+                  Your Codespace is ready. Use <code className="bg-muted px-1 rounded">claude</code> in
+                  the terminal to work with Claude Code. Your interactions are automatically logged.
+                </p>
+                <a
+                  href={codespaceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/80"
+                  data-testid="open-codespace-link"
+                >
+                  Open Codespace
+                </a>
+              </div>
+            ) : envStatus === "failed" ? (
+              <div className="space-y-2">
+                <Badge variant="destructive">Failed</Badge>
+                <p className="text-sm text-muted-foreground">
+                  Environment setup failed. Please try starting a new exam attempt.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Badge variant="outline">Setting up...</Badge>
+                <p className="text-sm text-muted-foreground">
+                  Your Codespace is being prepared. This usually takes 1-2 minutes.
+                </p>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex justify-between">
             <p className="text-xs text-muted-foreground">

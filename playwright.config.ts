@@ -36,6 +36,7 @@ export default defineConfig({
       testMatch: [
         "**/app-header.spec.ts",
         "**/auth-security.spec.ts",
+        "**/validation-events.spec.ts",
       ],
       use: { ...devices["Desktop Chrome"] },
     },

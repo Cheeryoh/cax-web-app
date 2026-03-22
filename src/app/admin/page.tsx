@@ -104,6 +104,7 @@ export default function AdminDashboard() {
     Record<string, DimensionFormState>
   >({});
   const [reviewLoading, setReviewLoading] = useState(false);
+  const [evalLoading, setEvalLoading] = useState<Record<number, boolean>>({});
 
   async function loadCandidates() {
     const res = await fetch("/api/admin");
@@ -206,6 +207,27 @@ export default function AdminDashboard() {
       }),
     });
     await loadCandidates();
+  }
+
+  async function triggerEvaluation(attemptId: number) {
+    setEvalLoading((prev) => ({ ...prev, [attemptId]: true }));
+    try {
+      await fetch("/api/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attemptId }),
+      });
+      // Wait briefly for the async evaluation to complete, then refresh
+      setTimeout(
+        () =>
+          loadCandidates().finally(() =>
+            setEvalLoading((prev) => ({ ...prev, [attemptId]: false }))
+          ),
+        2000
+      );
+    } catch {
+      setEvalLoading((prev) => ({ ...prev, [attemptId]: false }));
+    }
   }
 
   if (loading) {
@@ -501,6 +523,25 @@ export default function AdminDashboard() {
                                     ? "Saving…"
                                     : "Submit Review"}
                                 </Button>
+                                {(latest.attempt.status === "submitted" ||
+                                  latest.attempt.status === "evaluated") && (
+                                  <Button
+                                    variant="secondary"
+                                    data-testid="run-evaluation-btn"
+                                    disabled={
+                                      evalLoading[latest.attempt.id] ?? false
+                                    }
+                                    onClick={() =>
+                                      triggerEvaluation(latest.attempt.id)
+                                    }
+                                  >
+                                    {evalLoading[latest.attempt.id]
+                                      ? "Evaluating..."
+                                      : latest.attempt.status === "evaluated"
+                                        ? "Re-Evaluate"
+                                        : "Run Evaluation"}
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </TableCell>

@@ -83,3 +83,15 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_candidate ON sessions(candidate_id);
+
+CREATE TABLE IF NOT EXISTS validation_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  attempt_id INTEGER NOT NULL REFERENCES attempts(id),
+  event_type TEXT NOT NULL,
+  tool_name TEXT,
+  tool_input TEXT,
+  tool_output TEXT,
+  timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+  raw_json TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_validation_events_attempt ON validation_events(attempt_id);

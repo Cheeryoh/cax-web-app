@@ -36,6 +36,7 @@ export function getDb(): Database.Database {
   // Idempotent migrations for columns added after initial schema
   try { db.exec("ALTER TABLE attempts ADD COLUMN human_reviewed INTEGER NOT NULL DEFAULT 0"); } catch { /* column already exists */ }
   try { db.exec("ALTER TABLE attempts ADD COLUMN final_result TEXT"); } catch { /* column already exists */ }
+  try { db.exec("ALTER TABLE environments ADD COLUMN codespace_name TEXT"); } catch { /* column already exists */ }
 
   return db;
 }

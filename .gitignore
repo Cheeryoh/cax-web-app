@@ -12,3 +12,13 @@ yarn-error.log*
 .bash_history
 # Playwright auth state files — contain session cookies, never commit
 specs/.auth/
+# Pretty-printed transcripts (derived from .claude JSONL, large files)
+transcripts/*.json
+transcripts/subagents/
+transcripts/.last-sync.log
+.next/
+data/cax.db
+data/cax.db-shm
+data/cax.db-wal
+playwright-report/
+cax-app/

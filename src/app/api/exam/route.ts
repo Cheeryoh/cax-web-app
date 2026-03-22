@@ -8,6 +8,8 @@ import {
   getAttemptsByCandidate,
   getAttemptSummary,
 } from "@/lib/exam-service";
+import { createEnvironment } from "@/lib/environment-service";
+import { runFullEvaluation } from "@/lib/evaluation-service";
 
 function getAuthenticatedCandidate(request: NextRequest) {
   const token = request.cookies.get("session")?.value;
@@ -54,7 +56,8 @@ export async function POST(request: NextRequest) {
 
   if (action === "start") {
     const attempt = createAttempt(candidate.id);
-    return NextResponse.json({ attempt });
+    const env = await createEnvironment(attempt.id).catch(() => null);
+    return NextResponse.json({ attempt, environment: env });
   }
 
   if (action === "submit_mc") {
@@ -73,6 +76,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing attemptId" }, { status: 400 });
     }
     updateAttemptStatus(attemptId, "submitted");
+    // Fire-and-forget: run evaluation asynchronously after submission
+    runFullEvaluation(attemptId).catch((err) =>
+      console.error("Auto-evaluation failed:", err)
+    );
     return NextResponse.json({ success: true });
   }
 
