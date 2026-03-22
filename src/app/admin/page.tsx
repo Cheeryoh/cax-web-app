@@ -778,10 +778,12 @@ export default function AdminDashboard() {
                                               </div>
 
                                               {/* LLM Justification */}
-                                              <p className="text-xs text-muted-foreground leading-relaxed break-words">
-                                                {evalItem.llm_justification ??
-                                                  "No justification available"}
-                                              </p>
+                                              <div className="w-full overflow-hidden">
+                                                <p className="text-xs text-muted-foreground leading-relaxed whitespace-normal break-words [overflow-wrap:anywhere]">
+                                                  {evalItem.llm_justification ??
+                                                    "No justification available"}
+                                                </p>
+                                              </div>
 
                                               {/* Dialogue Thread */}
                                               {evalDialogue.length >
@@ -810,7 +812,7 @@ export default function AdminDashboard() {
                                                             )}
                                                             )
                                                           </span>
-                                                          <p className="mt-0.5 break-words whitespace-pre-wrap">
+                                                          <p className="mt-0.5 whitespace-normal break-words [overflow-wrap:anywhere]">
                                                             {d.reasoning}
                                                           </p>
                                                         </div>
