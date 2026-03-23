@@ -198,7 +198,7 @@ export default function ExamPage() {
           <CardHeader>
             <CardTitle>Multiple Choice Complete</CardTitle>
             <CardDescription>
-              You scored {mcResult?.correct}/{mcResult?.total}
+              Your answers have been recorded.
             </CardDescription>
           </CardHeader>
           <CardContent>
